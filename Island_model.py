@@ -18,7 +18,7 @@ class IslandModel:
         islands = []
         for _ in range(self.num_islands):
             indi_islands = []
-            for i in population_size_per_island:
+            for i in range(population_size_per_island):
                 #  population size of 100 passed in the tsp problem
                 chormosome = tsp.EvolAlgo(100)
                 indi_islands.append(chormosome)
