@@ -42,9 +42,6 @@ def distance(individual):
 		distance += get_distance(city_dict[individual[i]], city_dict[individual[(i+1) % num_individuals]])
 	return distance
 
-print(distance(city_list))
-print(city_list, city_dict)
-exit(0)
 class TSP_Path(Individual):
 	def __init__(self, genome):
 		fitness = distance(genome)
