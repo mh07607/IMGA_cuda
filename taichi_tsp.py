@@ -5,19 +5,7 @@ from taichi_rng import *
     
 from taichi_tsp_readdata import NUM_CITIES, distance, TYPE_GENOME, _generate_genome
 
-# class TSP_Path(Individual):
-# 	def __init__(self, genome):
-# 		fitness = distance(genome)
-# 		super().__init__(genome, fitness)
-	
-# 	def mutate(self) -> None:
-# 		# mutation defined by reversing orders for now and to be changed
-# 		# porposed algorithm would be to randomly swich 10 neighboring places such that it's neighbors have less distance as compared with the one
-# 		rand_index1 = random.randint(0, len(self.genome)-1)
-# 		rand_index2 = random.randint(0, len(self.genome)-1)
 
-# 		self.genome[rand_index1], self.genome[rand_index2] = self.genome[rand_index2], self.genome[rand_index1]
-# 		self.fitness = distance(self.genome)
 
 
 @ti.dataclass
@@ -48,16 +36,19 @@ class Individual:
 @ti.kernel
 def test_kernel():
     individual = Individual()
+    individual.genome[23] = 90
+    print(individual.genome)
     individual.initialize()
-    # print(individual.genome)
+    # # BUG: Uncommenting this line will make the individual.fitness to not change in mutate ??? (Weird)
+    # # print(individual.genome)
     print("fitness: ", individual.fitness)
     individual.mutate()
+    individual.genome[193] = 900
     # print("genome: ", individual.genome.val)
     print("fitness: ", individual.fitness)
     print(individual.genome)
     
     
 if __name__ == "__main__":
-
     test_kernel()
     

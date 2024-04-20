@@ -1,4 +1,7 @@
 import taichi as ti
+if __name__ == "__main__":
+	ti.init(ti.cpu, default_fp=ti.f64)
+ 
 from taichi_rng import randint
 
 '''Fetching Data'''
@@ -29,7 +32,10 @@ if __name__ == "__main__":
 	ti.init(arch=ti.cpu, default_fp=ti.f64)
 
 NUM_CITIES = len(city_keys)
+
+# # BUG: Taichi gives a warning to use vectors larger than size 32
 TYPE_GENOME = ti.types.vector(NUM_CITIES, ti.i32)
+
 CITY_KEYS = ti.field(dtype=ti.i32, shape=len(city_keys))
 CITY_COORDS = ti.Vector.field(2, dtype=ti.f64, shape=len(city_dict))
 
@@ -44,15 +50,15 @@ def get_distance(x: ti.math.vec2, y: ti.math.vec2) -> ti.f64:
 
 @ti.func
 def distance(cities, num_cities) -> ti.f64:
-    distance = ti.f64(0.0)
-    for i in range(num_cities):
-        a, b = cities[i], cities[(i+1) % num_cities]
-        distance += get_distance(CITY_COORDS[a-1], CITY_COORDS[b-1])
-    return distance
+	distance = ti.f64(0.0)
+	for i in range(num_cities):
+		a, b = cities[i], cities[(i+1) % num_cities]
+		distance += get_distance(CITY_COORDS[a-1], CITY_COORDS[b-1])
+	return distance
 
 @ti.func
 def _generate_genome() -> TYPE_GENOME:
-	genome = ti.Vector([i+1 for i in range(NUM_CITIES)])
+	genome = TYPE_GENOME([i+1 for i in range(NUM_CITIES)])
 	for i in range(NUM_CITIES):
 		j = randint(0, NUM_CITIES-1)
 		genome[i], genome[j] = genome[j], genome[i]
@@ -60,7 +66,8 @@ def _generate_genome() -> TYPE_GENOME:
 
 @ti.kernel
 def test_kernel():
-    print(distance(CITY_KEYS, NUM_CITIES))
+	
+	print(distance(CITY_KEYS, NUM_CITIES))
 
 if __name__ == "__main__": 
     print(CITY_KEYS)   
