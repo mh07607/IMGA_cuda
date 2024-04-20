@@ -39,13 +39,13 @@ CITY_KEYS = ti.field(dtype=ti.i32, shape=len(city_keys))
 CITY_COORDS = ti.Vector.field(2, dtype=ti.f64, shape=len(city_dict))
 
 for i in range(len(city_keys)):
-    CITY_KEYS[i] = city_keys[i]
-    CITY_COORDS[i][0], CITY_COORDS[i][1] = city_dict[city_keys[i]]
+	CITY_KEYS[i] = city_keys[i]
+	CITY_COORDS[i][0], CITY_COORDS[i][1] = city_dict[city_keys[i]]
 
 @ti.func
 def get_distance(x: ti.math.vec2, y: ti.math.vec2) -> ti.f64:
-    # x and y are two 2D points each not 2 coordinates of one 2D point.
-    return ((x[0]-y[0])**2 + (x[1]-y[1])**2)**(1/2)
+	# x and y are two 2D points each not 2 coordinates of one 2D point.
+	return ((x[0]-y[0])**2 + (x[1]-y[1])**2)**(1/2)
 
 @ti.func
 def distance(cities, num_cities) -> ti.f64:
@@ -68,6 +68,6 @@ def test_kernel():
 	print(distance(CITY_KEYS, NUM_CITIES))
 
 if __name__ == "__main__": 
-    print(CITY_KEYS)
-    test_kernel()
+	print(CITY_KEYS)
+	test_kernel()
 	print(city_keys)
