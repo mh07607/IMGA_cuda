@@ -79,7 +79,7 @@ def IN(iterable, length, element) -> ti.i32:
     return ret
 
 @ti.func
-def TSP_random_length_crossover(parent1: Individual, parent2: Individual) -> Individual_2_tuple:
+def TSP_random_length_crossover(self, parent1: Individual, parent2: Individual) -> Individual_2_tuple:
     length = parent1.genome_size
     start = randint(1, length-3)
     end = randint(start, length-2)
