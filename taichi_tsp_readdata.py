@@ -27,10 +27,6 @@ def read_and_convert_to_dict(FILE_PATH):
 FILE_PATH = 'data/qa194.tsp'  # Replace with the path to your text file
 city_keys, city_dict = read_and_convert_to_dict(FILE_PATH)
 
-# need to initialize taichi before importing this file
-if __name__ == "__main__":
-	ti.init(arch=ti.cpu, default_fp=ti.f64)
-
 NUM_CITIES = len(city_keys)
 
 # # BUG: Taichi gives a warning to use vectors larger than size 32
@@ -66,7 +62,6 @@ def _generate_genome() -> TYPE_GENOME:
 
 @ti.kernel
 def test_kernel():
-	
 	print(distance(CITY_KEYS, NUM_CITIES))
 
 if __name__ == "__main__": 
