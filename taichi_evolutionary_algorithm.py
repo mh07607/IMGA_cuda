@@ -20,8 +20,28 @@ class EvolutionaryAlgorithm:
     num_offsprings: int
     
 
+# @ti.func
+# def truncation_selection(num_selections: ti.i32, res_opt: ti.i32 = 0):
+#     # Temporary array to store indices and fitness values
+#     indices = ti.Vector([i for i in range(POPULATION_SIZE)], dt=ti.i32)
+#     fitnesses = ti.Vector([POPULATION[i].fitness for i in range(POPULATION_SIZE)], dt=ti.f64)
+    
+#     # Sort the array based on fitness values
+#     for i in range(POPULATION_SIZE):
+#         for j in range(i + 1, POPULATION_SIZE):
+#             if fitnesses[i] > fitnesses[j]:
+#                 fitnesses[i], fitnesses[j] = fitnesses[j], fitnesses[i]
+#                 indices[i], indices[j] = indices[j], indices[i]
+
+#     # Select the top num_selection elements and store them in SELECTION_RESULTS
+#     if res_opt == 0:
+#         for i in range(num_selections):
+#             SELECTION_RESULTS[i] = POPULATION[indices[i]]
+#     elif res_opt == 1:
+#         pass # any other storage option
+
 @ti.func
-def truncation_selection(num_selections: ti.i32, res_opt: ti.i32 = 0):
+def truncation_selection(num_selections: ti.i32):
     # Temporary array to store indices and fitness values
     indices = ti.Vector([i for i in range(POPULATION_SIZE)], dt=ti.i32)
     fitnesses = ti.Vector([POPULATION[i].fitness for i in range(POPULATION_SIZE)], dt=ti.f64)
@@ -34,12 +54,12 @@ def truncation_selection(num_selections: ti.i32, res_opt: ti.i32 = 0):
                 indices[i], indices[j] = indices[j], indices[i]
 
     # Select the top num_selection elements and store them in SELECTION_RESULTS
-    if res_opt == 0:
-        for i in range(num_selections):
-            SELECTION_RESULTS[i] = POPULATION[indices[i]]
-    elif res_opt == 1:
-        pass # any other storage option
-    
+    selection_results = Individual.field(shape=POPULATION_SIZE)
+    for i in range(num_selections):
+        selection_results[i] = POPULATION[indices[i]]            
+
+    return selection_results
+
 @ti.func
 def random_selection(self, num_selections: ti.i32): # -> Feild of Indivdual Structs
     survivors = ti.Vector.field(2, dtype=ti.f32, shape=(num_selections,))
@@ -69,11 +89,23 @@ def test_truncation_selection():
         print(SELECTION_RESULTS[x].fitness)
     for x in range(POPULATION_SIZE):
         print(POPULATION[x].fitness, end=', ')
-    
+
+
+
+@ti.kernel
+def run(num_generations: int) -> None:
+    evolalgo = ti.types.struct(mutation_rate=0.5, num_offsprings=10,
+                           __struct_methods={'parent_selection_function': truncation_selection,
+                                              'survivor_selection_function': truncation_selection})
+    ti.loop_config(serialize=True)
+    for i in range(num_generations):
+        evolalgo.parent_selection_function(2)
+        evolalgo.survivor_selection_function(POPULATION_SIZE)
+
 if __name__ == "__main__":
     # ev = EvolutionaryAlgorithm()
     # ev.population = [Individual(), Individual()]
     # ev.population[0].initialize()
     # print(random_selection(ev, 2))
     # print(binary_tournament_selection(ev, 2))
-    test_truncation_selection()
+    test_truncation_selection() 
