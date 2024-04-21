@@ -146,15 +146,22 @@ def run_generation(self):
     for k in range(0, self.num_offsprings-1):
         if k % 2 == 1:
             continue
-        print(PARENT_SELECTION[k].genome, PARENT_SELECTION[k+1].genome)
-        offsprings = self.cross_over_function(PARENT_SELECTION[k], PARENT_SELECTION[k+1])
+        # print(PARENT_SELECTION[k].genome, PARENT_SELECTION[k+1].genome)
+        offspring1_genome, offspring2_genome = self.cross_over_function(PARENT_SELECTION[k], PARENT_SELECTION[k+1])
+        offspring1 = Individual()
+        offspring1.initialize_with_genome(offspring1_genome)
+        offspring2 = Individual()
+        offspring2.initialize_with_genome(offspring2_genome)
+
         rand_num1, rand_num2 = randint(0,100)/100, randint(0,100)/100
         if rand_num1 <= self.mutation_rate:
-            offsprings.first.mutate()
+            offspring1.mutate()
         if rand_num2 <= self.mutation_rate:
-            offsprings.second.mutate()
-        break
+            offspring2.mutate()
             
+        POPULATION[POPULATION_SIZE+k] = offspring1
+        POPULATION[POPULATION_SIZE+k+1] = offspring2
+        
     self.survivor_selection_function(POPULATION_SIZE, 1)
     
 # def run(self, num_iterations: int=10, num_generations: int=1000) -> tuple:
