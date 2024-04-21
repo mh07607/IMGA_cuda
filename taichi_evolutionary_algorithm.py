@@ -33,8 +33,7 @@ class EvolutionaryAlgorithm:
     population_pointer: ti.i32
 
 @ti.func
-def truncation_selection(self, num_selections: ti.i32, res_opt: ti.i32):
-    print(123)
+def truncation_selection(self, num_selections: ti.i32, res_opt: ti.i32):    
     if res_opt == 0: # parent selection
         # Temporary array to store indices and fitness values
         indices = ti.Vector([i for i in range(POPULATION_SIZE)], dt=ti.i32)
@@ -58,6 +57,9 @@ def truncation_selection(self, num_selections: ti.i32, res_opt: ti.i32):
                 if fitnesses[i] > fitnesses[j]:
                     fitnesses[i], fitnesses[j] = fitnesses[j], fitnesses[i]
                     indices[i], indices[j] = indices[j], indices[i]
+
+        for i in range(num_selections):
+            POPULATION[i] = POPULATION[indices[i]]
 
  
     
@@ -194,7 +196,8 @@ def run(EA: EvolutionaryAlgorithm, num_iterations: ti.i32, num_generations: ti.i
         EA.run_generation()
         best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index()
         best_index = ti.i32(best_index)
-        print(best_index)
+        print("generation: ", i)        
+        print("best_individual: ", best_index, "fitness: ", POPULATION[best_index].fitness)
         # if best_individual.fitness < POPULATION[best_index]:
         #     best_individual = POPULATION[best_index]
     return best_index
@@ -226,4 +229,4 @@ if __name__ == "__main__":
         'run_generation': run_generation,
     }
     EA = EvolutionaryAlgorithm(mutation_rate=0.5, num_offsprings=20)
-    run(EA, 10, 10)
+    run(EA, 10, 1000)
