@@ -7,18 +7,19 @@ from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
+NUM_ISLANDS = 10
 
 # NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
 NUM_OFFSPRINGS = 2
 
-POPULATION = Individual.field(shape=(POPULATION_SIZE + NUM_OFFSPRINGS))
+POPULATION = Individual.field(shape=(POPULATION_SIZE + NUM_OFFSPRINGS, NUM_ISLANDS))
 
 # POPULATION_POINTER = ti.field(dtype=ti.i32, shape=())
 # POPULATION_POINTER[None] = 0
 
-PARENT_SELECTION = Individual.field(shape=NUM_OFFSPRINGS)
+PARENT_SELECTION = Individual.field(shape=(NUM_OFFSPRINGS, NUM_ISLANDS))
 
-SELECTION_RESULTS = Individual.field(shape=POPULATION_SIZE)
+SELECTION_RESULTS = Individual.field(shape=(POPULATION_SIZE, NUM_ISLANDS))
 
 @ti.dataclass
 class EvolutionaryAlgorithm:
@@ -164,7 +165,8 @@ def run_generation(self):
         POPULATION[POPULATION_SIZE+k] = offspring1
         POPULATION[POPULATION_SIZE+k+1] = offspring2
         
-    self.survivor_selection_function(POPULATION_SIZE, 1)
+    best_index = self.survivor_selection_function(POPULATION_SIZE, 1)
+    return best_index
     
 # def run(self, num_iterations: int=10, num_generations: int=1000) -> tuple:
 #     best_fitnesses = [[] for _ in range(num_iterations)]
@@ -185,24 +187,70 @@ def run_generation(self):
 
 #     return best_individual, best_fitnesses, average_fitnesses
         
+# @ti.kernel
+# def run(EA: EvolutionaryAlgorithm, num_iterations: ti.i32, num_generations: ti.i32) -> ti.i32:
+#         initial_population_function()
+#         # sum_avg_fitness = 0.0                
+#         best_index = 0
+#         for i in range(NUM_ISLANDS):
+#             for generation in range(num_generations):
+#                 EA.run_generation()
+#                 best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index()
+#                 best_index = ti.i32(best_index)
+#                 print("generation: ", generation)        
+#                 print("best_individual: ", best_index, "fitness: ", POPULATION[best_index].fitness)
+#                 BEST_INDIVIDUALS[i] = POPULATION[i][best_index]
+#                 # if best_individual.fitness < POPULATION[best_index]:
+#                 #     best_individual = POPULATION[best_index]
+#                 syncthreads()
+#                 for j in range(ISLAND_POPULATION_SIZE):
+#                     POPULATION
+#         return best_index
+        
+'''
+Migration strategies will go here
+- Ring migration, Hamming distance similarity, LCS
+'''
+@ti.func
+def ring_migration():
+    pass
+
+        
 @ti.kernel
-def run(EA: EvolutionaryAlgorithm, num_iterations: ti.i32, num_generations: ti.i32) -> ti.i32:
-        initial_population_function()
-        # sum_avg_fitness = 0.0        
-        ti.loop_config(serialize=True)
-        best_index = 0
-        for i in range(num_generations):
-            EA.run_generation()
-            # best_index is always 0 so we don't need this function
-            best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index()
-            best_index = ti.i32(best_index)
-            print("generation: ", i)        
-            print("best_individual: ", best_index, "fitness: ", POPULATION[best_index].fitness)                    
-        return best_index
-        
-        
+def i_run_generation():
+    '''
+    NOTES
+    - All selection functions will need to know which island for selections i.e. island index
+    - We need to return best_individual index in each selection function for migration purpose
+    - Will migrants add to the population of each island? (We can place it randomly in the island 
+    population for now but in general population increases)
+    - Need to keep track of the best individual amongst all islands, we can do this using the
+    individual indices array
+    
+    - We need to make functions for different migration strategies
+    - Migrate after how many generations?
+    - Each island can have separate configuration, can it be adaptive?
+    - Isn't it better practice to pass the islands population itself in the selection functions
+    instead of the index. The only pitfall could be if the values in place are not changed but 
+    I think they will be
+    '''    
+    best_individual_indices = ti.Vector(0 for i in range(NUM_ISLANDS))
+    for i in range(NUM_ISLANDS):
+        best_index = ISLANDS[i].run_generation()
+        best_individual_indices[i] = best_index
+    
+    ti.loop_config(serialize=True)
 
 
+
+    
+        
+
+def run_islands(num_iterations, num_generations):
+    for i in range(num_generations):
+        i_run_generation()
+    
+    
 ########################## TESTING ##########################
 @ti.kernel
 def test_truncation_selection():

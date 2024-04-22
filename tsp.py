@@ -123,16 +123,16 @@ class TSP_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
 
 
 '''Test Run'''
-# tsp = TSP_EvolutionaryAlgorithm(
-#       initial_population_function = random_intercity_paths,
-#       parent_selection_function = 'truncation',
-#       survivor_selection_function = 'random',
-#       cross_over_function = TSP_random_length_crossover,
-#       population_size = 100,
-#       mutation_rate = 0.5,
-#       num_offsprings=20
-#       )
-# tsp.run()
+tsp = TSP_EvolutionaryAlgorithm(
+      initial_population_function = random_intercity_paths,
+      parent_selection_function = 'truncation',
+      survivor_selection_function = 'truncation',
+      cross_over_function = TSP_random_length_crossover,
+      population_size = 100,
+      mutation_rate = 0.5,
+      num_offsprings=2
+      )
+tsp.run()
 
 
 
