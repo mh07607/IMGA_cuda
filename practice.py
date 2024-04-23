@@ -50,9 +50,17 @@ def test_sphere():
     print(abc.two(2))    
     
     
+f_2d = ti.field(ti.f32, shape=(16, 10))
+
+@ti.kernel
+def loop_over_2d():
+  for i, j in f_2d:
+      f_2d[i, j] = i
 
 
 
 if __name__ == '__main__':
+    loop_over_2d()
+    print(f_2d)
     test_sphere()
     

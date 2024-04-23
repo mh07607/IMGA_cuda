@@ -5,16 +5,11 @@ if __name__ == "__main__":
 from taichi_rng import randint # similar to random.randint and random.sample
 from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
 
-# POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
 
-# NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
 NUM_OFFSPRINGS = 2
 
 POPULATION = Individual.field(shape=(POPULATION_SIZE + NUM_OFFSPRINGS))
-
-# POPULATION_POINTER = ti.field(dtype=ti.i32, shape=())
-# POPULATION_POINTER[None] = 0
 
 PARENT_SELECTION = Individual.field(shape=NUM_OFFSPRINGS)
 
@@ -61,43 +56,9 @@ def truncation_selection(self, num_selections: ti.i32, res_opt: ti.i32):
         for i in range(num_selections):
             POPULATION[i] = POPULATION[indices[i]]
 
- 
-    
-# @ti.func
-# def random_selection(self, num_selections: ti.i32): # -> Feild of Indivdual Structs
-#     survivors = ti.Vector.field(2, dtype=ti.f32, shape=(num_selections,))
-#     for i in range(num_selections):
-#         random_int = randint(0, len(self.population)-1)
-#         survivors[i] = self.population[random_int]
-#     return survivors
 
-# @ti.func
-# def binary_tournament_selection(self, num_selections: ti.i32):
-#     result = ti.Vector.field(2, dtype=ti.f64, shape=(num_selections,))
-#     for i in range(num_selections):
-#         ind1, ind2 = sample(self.population, 2)
-#         selected = ind1 if ind1.fitness < ind2.fitness else ind2
-#         result[i] = selected
-#     return result
 
 ########################## METHODS ##########################
-
-# def get_average_and_best_individual(self) -> tuple[Individual, float]:
-#     best_individual = self.population[0]
-#     cumulative_fitness = 0
-#     for individual in self.population:
-#       if(individual.fitness < best_individual.fitness):
-#         best_individual = individual
-#       cumulative_fitness += individual.fitness
-#     average_fitness = cumulative_fitness/len(self.population)
-#     return best_individual, average_fitness
-
-
-# def get_total_fitness(self) -> float:
-# total_fitness = 0
-# for individual in self.population:
-#     total_fitness += individual.fitness
-# return total_fitness
 
 @ti.func
 def get_avg_fitnes_n_best_indiv_index():
@@ -126,24 +87,8 @@ def initial_population_function():
 
 ########################## RUN ##########################
 
-# def run_generation(self) -> None:
-#     parents = self.parent_selection_function(self.num_offsprings)
-
-#     # creating offspring
-#     for k in range(0, self.num_offsprings-1, 2):
-#       offspring1, offspring2 = self.cross_over_function(parents[k], parents[k+1])
-#       rand_num1, rand_num2 = random.randint(0,100)/100, random.randint(0,100)/100
-#       if rand_num1 <= self.mutation_rate:
-#         offspring1.mutate()
-#       if rand_num2 <= self.mutation_rate:
-#         offspring2.mutate()
-#       self.population.extend([offspring1, offspring2])
-
-#     self.population = self.survivor_selection_function(self.population_size[None])
-
 @ti.func
 def run_generation(self):
-    self.population_pointer = 100
     self.parent_selection_function(self.num_offsprings, 0)
     for k in range(0, self.num_offsprings-1):
         if k % 2 == 1:
@@ -166,25 +111,7 @@ def run_generation(self):
         
     self.survivor_selection_function(POPULATION_SIZE, 1)
     
-# def run(self, num_iterations: int=10, num_generations: int=1000) -> tuple:
-#     best_fitnesses = [[] for _ in range(num_iterations)]
-#     average_fitnesses = [[] for _ in range(num_iterations)]
-#     x_offset = num_generations // 20
 
-#     for j in range(num_iterations):
-#         for i in tqdm(range(num_generations), desc='Iteration '+str(j+1)):
-#             self.run_generation()
-#             if(i % x_offset == 0):
-#                 best_individual, average_fitness = self.get_average_and_best_individual()
-#                 print("\nAverage fitness: ", average_fitness, ", Best value: ", best_individual.fitness)
-#                 best_fitnesses[j].append(best_individual.fitness)
-#                 average_fitnesses[j].append(average_fitness)
-
-#         self.population = self.initial_population_function(self.population_size)
-
-
-#     return best_individual, best_fitnesses, average_fitnesses
-        
 @ti.kernel
 def run(EA: EvolutionaryAlgorithm, num_iterations: ti.i32, num_generations: ti.i32) -> ti.i32:
         initial_population_function()
