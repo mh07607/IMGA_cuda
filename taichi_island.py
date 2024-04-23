@@ -13,7 +13,6 @@ NUM_ISLANDS = 10
 NUM_OFFSPRINGS = 2
 
 POPULATION = Individual.field(shape=(POPULATION_SIZE + NUM_OFFSPRINGS, NUM_ISLANDS))
-
 # POPULATION_POINTER = ti.field(dtype=ti.i32, shape=())
 # POPULATION_POINTER[None] = 0
 
@@ -33,12 +32,23 @@ class EvolutionaryAlgorithm:
     population_size: ti.i32
     population_pointer: ti.i32
 
+ISLANDS = EvolutionaryAlgorithm.field(shape=(NUM_ISLANDS,))
+
+'''
+TO-DO
+1. We should return indices from this function instead of making a separate buffer
+at least in the case of parent selection. In this way we can just return a Vector
+and not have to use a global memory access. In case of survivor selection, we can just
+simply return an empty Vector along with 
+2. We should replace bubble sort here with merge-sort.
+3. We should get rid of num_selections and just use POPULATION_SIZE and NUM_OFFSPRINGS as parameters
+'''
 @ti.func
-def truncation_selection(self, num_selections: ti.i32, res_opt: ti.i32):    
+def i_truncation_selection(self, island_index: ti.i32, num_selections: ti.i32, res_opt: ti.i32):    
     if res_opt == 0: # parent selection
         # Temporary array to store indices and fitness values
         indices = ti.Vector([i for i in range(POPULATION_SIZE)], dt=ti.i32)
-        fitnesses = ti.Vector([POPULATION[i].fitness for i in range(POPULATION_SIZE)], dt=ti.f64)
+        fitnesses = ti.Vector([POPULATION[island_index, i].fitness for i in range(POPULATION_SIZE)], dt=ti.f64)
         
         # Sort the array based on fitness values
         for i in range(POPULATION_SIZE):
@@ -46,21 +56,21 @@ def truncation_selection(self, num_selections: ti.i32, res_opt: ti.i32):
                 if fitnesses[i] > fitnesses[j]:
                     fitnesses[i], fitnesses[j] = fitnesses[j], fitnesses[i]
                     indices[i], indices[j] = indices[j], indices[i]
+        
+        # Selecting parents
         for i in range(num_selections):
-            PARENT_SELECTION[i] = POPULATION[indices[i]]
+            PARENT_SELECTION[island_index, i] = POPULATION[indices[i]]
     elif res_opt == 1: # survivor selection
         # Temporary array to store indices and fitness values
-        indices = ti.Vector([i for i in range(POPULATION_SIZE + NUM_OFFSPRINGS)], dt=ti.i32)
-        fitnesses = ti.Vector([POPULATION[i].fitness for i in range(POPULATION_SIZE + NUM_OFFSPRINGS)], dt=ti.f64)
+        # indices = ti.Vector([i for i in range(POPULATION_SIZE + NUM_OFFSPRINGS)], dt=ti.i32)
+        # fitnesses = ti.Vector([POPULATION[i].fitness for i in range(POPULATION_SIZE + NUM_OFFSPRINGS)], dt=ti.f64)
         # Sort the array based on fitness values
         for i in range(POPULATION_SIZE + NUM_OFFSPRINGS):
             for j in range(i + 1, POPULATION_SIZE + NUM_OFFSPRINGS):
-                if fitnesses[i] > fitnesses[j]:
-                    fitnesses[i], fitnesses[j] = fitnesses[j], fitnesses[i]
-                    indices[i], indices[j] = indices[j], indices[i]
-
-        for i in range(num_selections):
-            POPULATION[i] = POPULATION[indices[i]]
+                if POPULATION[island_index, i].fitness > POPULATION[island_index, j].fitness:
+                    POPULATION[island_index, i], POPULATION[island_index, j] = POPULATION[island_index, j], POPULATION[island_index, i]
+            
+    return 0
 
  
     
@@ -211,9 +221,9 @@ def run_generation(self):
 Migration strategies will go here
 - Ring migration, Hamming distance similarity, LCS
 '''
-@ti.func
-def ring_migration():
-    pass
+# @ti.func
+# def ring_migration():
+#     pass
 
         
 @ti.kernel
@@ -223,27 +233,29 @@ def i_run_generation():
     - All selection functions will need to know which island for selections i.e. island index
     - We need to return best_individual index in each selection function for migration purpose
     - Will migrants add to the population of each island? (We can place it randomly in the island 
-    population for now but in general population increases)
+    population for now but waise population increases)
     - Need to keep track of the best individual amongst all islands, we can do this using the
     individual indices array
     
     - We need to make functions for different migration strategies
-    - Migrate after how many generations?
+    - Migrate after variable n generations?
     - Each island can have separate configuration, can it be adaptive?
     - Isn't it better practice to pass the islands population itself in the selection functions
     instead of the index. The only pitfall could be if the values in place are not changed but 
-    I think they will be
+    I think they will be.
     '''    
     best_individual_indices = ti.Vector(0 for i in range(NUM_ISLANDS))
     for i in range(NUM_ISLANDS):
-        best_index = ISLANDS[i].run_generation()
+        best_index = ISLANDS[i].run_generation(i)
         best_individual_indices[i] = best_index
     
+    #ring_migration single individual
     ti.loop_config(serialize=True)
+    for i in range(NUM_ISLANDS):
+        rand_index = randint(0, POPULATION_SIZE)
+        ISLANDS[i+1 % NUM_ISLANDS][rand_index] = ISLANDS[i][best_individual_indices[i]]
 
 
-
-    
         
 
 def run_islands(num_iterations, num_generations):
@@ -264,8 +276,6 @@ def test_truncation_selection():
         print(SELECTION_RESULTS[x].fitness)
     for x in range(POPULATION_SIZE):
         print(POPULATION[x].fitness, end=', ')
-        
-
 
 if __name__ == "__main__":
     EvolutionaryAlgorithm.methods = {
