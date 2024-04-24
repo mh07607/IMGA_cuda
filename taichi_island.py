@@ -195,30 +195,30 @@ Migration strategies will go here
 - Ring migration, Hamming distance similarity, LCS
 '''
 
-# LCS adapted from GeeksforGeeks
-@ti.func
-def LCS(X, Y): 
-	# find the length of the strings 
-	m = len(X) 
-	n = len(Y) 
+# # LCS adapted from GeeksforGeeks
+# @ti.func
+# def LCS(X, Y): 
+# 	# find the length of the strings 
+# 	m = len(X) 
+# 	n = len(Y) 
  
-	# declaring the array for storing the dp values 
-	L = [[None]*(n + 1) for i in range(m + 1)] 
+# 	# declaring the array for storing the dp values 
+# 	L = [[None]*(n + 1) for i in range(m + 1)] 
  
-	"""Following steps build L[m + 1][n + 1] in bottom up fashion 
-	Note: L[i][j] contains length of LCS of X[0..i-1] 
-	and Y[0..j-1]"""
-	for i in range(m + 1): 
-		for j in range(n + 1): 
-			if i == 0 or j == 0 : 
-				L[i][j] = 0
-			elif X[i-1] == Y[j-1]: 
-				L[i][j] = L[i-1][j-1]+1
-			else: 
-				L[i][j] = max(L[i-1][j], L[i][j-1]) 
+# 	"""Following steps build L[m + 1][n + 1] in bottom up fashion 
+# 	Note: L[i][j] contains length of LCS of X[0..i-1] 
+# 	and Y[0..j-1]"""
+# 	for i in range(m + 1): 
+# 		for j in range(n + 1): 
+# 			if i == 0 or j == 0 : 
+# 				L[i][j] = 0
+# 			elif X[i-1] == Y[j-1]: 
+# 				L[i][j] = L[i-1][j-1]+1
+# 			else: 
+# 				L[i][j] = max(L[i-1][j], L[i][j-1]) 
  
-	# L[m][n] contains the length of LCS of X[0..n-1] & Y[0..m-1] 
-	return L[m][n] 
+# 	# L[m][n] contains the length of LCS of X[0..n-1] & Y[0..m-1] 
+# 	return L[m][n] 
 
 @ti.func
 def hamming_based_migration(self):
@@ -231,6 +231,8 @@ def hamming_based_migration(self):
 		least_distance_index = -1
 		least_distance = ti.math.inf
 		for other_ind in range(NUM_ISLANDS):
+			if(other_ind == isl_ind):
+				continue
 			distance_bw_best = isl_best_indiv.hamming_distance(ISL_POPULATIONS[other_ind, BEST_INDICES[other_ind]])
 			if(distance_bw_best < least_distance):
 				least_distance = distance_bw_best
@@ -247,6 +249,8 @@ def LCS_based_migration(self):
 		least_distance_index = -1
 		least_distance = ti.math.inf
 		for other_ind in range(NUM_ISLANDS):
+			if(other_ind == isl_ind):
+				continue
 			distance_bw_best = isl_best_indiv.euclidean_distance(ISL_POPULATIONS[other_ind, BEST_INDICES[other_ind]])
 			if(distance_bw_best < least_distance):
 				least_distance = distance_bw_best

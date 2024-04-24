@@ -76,7 +76,7 @@ class Individual:
 			for j in range(NUM_CITIES + 1): 
 				if i == 0 or j == 0 : 
 					L[i][j] = 0
-				elif self.genome[i-1] == [j-1]: 
+				elif self.genome[i-1] == individual.genome[j-1]: 
 					L[i][j] = L[i-1][j-1]+1
 				else: 
 					L[i][j] = ti.math.max(L[i-1][j], L[i][j-1]) 
