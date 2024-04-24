@@ -272,7 +272,5 @@ if __name__ == '__main__':
     parent_method = 2
     model = IslandModels(num_islands, population_size_per_island, num_generations, migration_interval, migration_rate, mutation_rate, tournament_size, migration_stratergy, graph, survivor_method, parent_method)
     model.evolve()
-
-
-
     
+refrence: https://github.com/soumildatta/GeneticGraphColoring/blob/main/geneticColoring.py
