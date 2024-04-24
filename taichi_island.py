@@ -29,6 +29,17 @@ class EvolutionaryAlgorithm:
     # cross_over_function: FunctionType, 
     mutation_rate: ti.f64
 
+ISLANDS = EvolutionaryAlgorithm.field(shape=(NUM_ISLANDS,))
+
+'''
+TO-DO
+1. We should return indices from this function instead of making a separate buffer
+at least in the case of parent selection. In this way we can just return a Vector
+and not have to use a global memory access. In case of survivor selection, we can just
+simply return an empty Vector along with 
+2. We should replace bubble sort here with merge-sort.
+3. We should get rid of num_selections and just use POPULATION_SIZE and NUM_OFFSPRINGS as parameters
+'''
 @ti.func
 def truncation_selection(self, isl_ind: ti.i32, num_selections: ti.i32, res_opt: ti.i32):    
     if res_opt == 0: # parent selection
@@ -42,6 +53,8 @@ def truncation_selection(self, isl_ind: ti.i32, num_selections: ti.i32, res_opt:
                 if fitnesses[i] > fitnesses[j]:
                     fitnesses[i], fitnesses[j] = fitnesses[j], fitnesses[i]
                     indices[i], indices[j] = indices[j], indices[i]
+        
+        # Selecting parents
         for i in range(num_selections):
             ISL_PARENT_SELECTIONS[isl_ind, i] = ISL_POPULATIONS[isl_ind, indices[i]]
             
@@ -110,12 +123,12 @@ def i_run_generation(self, isl_ind: ti.i32):
     - All selection functions will need to know which island for selections i.e. island index
     - We need to return best_individual index in each selection function for migration purpose
     - Will migrants add to the population of each island? (We can place it randomly in the island 
-    population for now but in general population increases)
+    population for now but waise population increases)
     - Need to keep track of the best individual amongst all islands, we can do this using the
     individual indices array
     
     - We need to make functions for different migration strategies
-    - Migrate after how many generations?
+    - Migrate after variable n generations?
     - Each island can have separate configuration, can it be adaptive?
     - Isn't it better practice to pass the islands population itself in the selection functions
     instead of the index. The only pitfall could be if the values in place are not changed but 
