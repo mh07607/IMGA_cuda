@@ -86,8 +86,8 @@ def IN(iterable, length, element) -> ti.i32:
 
 @ti.func
 def TSP_random_length_crossover(self, parent1, parent2):
-	start = randint(1, NUM_CITIES-3)
-	end = randint(start, NUM_CITIES-2)
+	start = randint(1, NUM_CITIES-2)
+	end = randint(start, NUM_CITIES-1)
 
 	offspring1_genome = ti.Vector([-1 for _ in range(NUM_CITIES)], dt=ti.i32)
 	offspring2_genome = ti.Vector([-1 for _ in range(NUM_CITIES)], dt=ti.i32)
@@ -96,10 +96,10 @@ def TSP_random_length_crossover(self, parent1, parent2):
 		offspring1_genome[i] = parent1.genome[i]
 		offspring2_genome[i] = parent2.genome[i]
 
-	parent1_pointer = end + 1
-	parent2_pointer = end + 1
+	parent1_pointer = (end + 1) % NUM_CITIES
+	parent2_pointer = (end + 1) % NUM_CITIES
 	# There's a more efficient way to do this I'm sure
-	pointer = end + 1
+	pointer = (end + 1) % NUM_CITIES
 	count = end-start+1
 	while count < NUM_CITIES:
 		gene_found = 0
@@ -114,7 +114,7 @@ def TSP_random_length_crossover(self, parent1, parent2):
 			pointer += 1
 		parent2_pointer = (parent2_pointer + 1) % NUM_CITIES
 
-	pointer = end+1
+	pointer = (end + 1) % NUM_CITIES
 	count = end-start+1
 	while count < NUM_CITIES:				
 		gene_found = 0
@@ -130,6 +130,22 @@ def TSP_random_length_crossover(self, parent1, parent2):
 		parent1_pointer = (parent1_pointer + 1) % NUM_CITIES  
 	
 	return offspring1_genome, offspring2_genome
+
+@ti.func
+def euclidean_distance(self, individual):
+	return ti.math.distance(self.genome, individual.genome)
+
+@ti.func
+def hamming_distance(self, individual):
+	result = ti.Vector([0 for _ in range(NUM_CITIES)])
+	for i in range(NUM_CITIES):
+		if(self.genome[i] == individual.genome[i]):
+			result[i] = 1
+	return result
+
+@ti.func
+def LCS(self, individual):
+	pass
 
 @ti.kernel
 def test_kernel():

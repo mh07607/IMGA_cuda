@@ -56,8 +56,6 @@ def truncation_selection(self, num_selections: ti.i32, res_opt: ti.i32):
         for i in range(num_selections):
             POPULATION[i] = POPULATION[indices[i]]
 
-
-
 ########################## METHODS ##########################
 
 @ti.func
