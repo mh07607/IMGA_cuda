@@ -23,7 +23,7 @@ def read_and_convert_to_dict(file_path):
 
 class chromosome():
     def __init__(self, comb: list): # comb is a list of the cities in the order they are to be visited
-        self.indi = comb[:]
+        self.indi = comb[:] 
 
         self.distance = 0
         self.chromosome_distance(self.indi) # allowing a new distance value to be generated
@@ -92,8 +92,8 @@ class Island():
         parent1 = chrom1.indi
         parent2 = chrom2.indi
 
-        offspring1 = [None] * 194
-        offspring2 = [None] * 194
+        offspring1 = [None] * len_chromosome
+        offspring2 = [None] * len_chromosome
 
         offspring1[start:end+1] = parent1[start:end+1]
         offspring2[start:end+1] = parent2[start:end+1]
@@ -166,7 +166,6 @@ class Island():
             ind1, ind2 = random.sample(self.island, 2)
             selected = ind1 if ind1.get_distance() < ind2.get_distance() else ind2
             result.append(selected)
-
         return result
     
     def fitness_proportional_selection(self,size):
@@ -175,7 +174,6 @@ class Island():
         selected_indices = np.random.choice(range(self.population_size), size=self.population_size, replace=True, p=selection_probs)
         return [self.island[i] for i in selected_indices[:size]]
     
-
 
     def rank_selection(self, size):
         self.island.sort(key=lambda chromo: chromo.distance)
