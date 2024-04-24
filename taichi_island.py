@@ -1,6 +1,6 @@
 import taichi as ti
 if __name__ == "__main__":
-	ti.init(arch=ti.cpu, default_fp=ti.f64)
+	ti.init(arch=ti.gpu, default_fp=ti.f64)
 	
 from taichi_rng import randint, randint_isl # similar to random.randint and random.sample
 from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
