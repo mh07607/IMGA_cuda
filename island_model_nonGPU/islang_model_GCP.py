@@ -6,28 +6,19 @@ import copy
 def read_graph_from_file(file_path):
     with open(file_path, 'r') as file:
         lines = file.readlines()
-
-        # Initialize variables to store graph size and edges
         n_vertices = 0
         edges = []
-
-        # Iterate through the lines in the file
         for line in lines:
-            # Skip comment lines
             if line.startswith('c'):
                 continue
-            # Parse graph size from the 'p edge' line
             elif line.startswith('p edge'):
                 parts = line.split()
                 n_vertices = int(parts[2])
-            # Parse edge definitions
             elif line.startswith('e'):
                 parts = line.split()
                 v1 = int(parts[1])
                 v2 = int(parts[2])
                 edges.append((v1, v2))
-
-        # Create an adjacency matrix representation of the graph
         graph = np.zeros((n_vertices, n_vertices), dtype=int)
         for edge in edges:
             v1, v2 = edge
@@ -127,8 +118,6 @@ class Island:
 
         child1 = self.mutation(child1, mutation_rate)
         child2 = self.mutation(child1, mutation_rate)
-
-
         return child1, child2
     
 
@@ -242,43 +231,6 @@ class IslandModels:
                 # Trim the population size of the target island
                 self.islands[target_island].island = self.islands[target_island].truncation_selection(self.population_size_per_island)
 
-        # elif stratergy == 3: # gene based similarity migration
-
-        #     for i in range(self.num_islands):
-        #         # Calculate the centroid of the current island population
-        #         centroid = np.mean([chromo.indi for chromo in self.islands[i].island], axis=0)
-                
-                
-        #         # Calculate the genetic similarity between individuals in the current island and individuals in other islands
-        #         similarity_scores = []
-        #         for j in range(self.num_islands):
-
-        #             if j != i:  # Exclude the current island
-
-        #                 # Calculate the centroid of the other island population
-        #                 other_centroid = np.mean([chromo.indi for chromo in self.islands[j].island], axis=0)
-
-                        
-        #                 # # Calculate the Euclidean distance between centroids
-        #                 # distance = np.sqrt(np.sum((centroid - other_centroid) ** 2))
-
-        #                 # Calculate the LCS distance between the two populations
-        #                 distance = self.lcs_distance(centroid, other_centroid)
-
-                        
-        #                 similarity_scores.append((j, distance))
-                    
-                
-        #         similarity_scores.sort(key=lambda x: x[1]) # Sort islands based on genetic similarity
-                
-        #         # Migrate individuals from the most genetically similar island
-        #         target_island = similarity_scores[0][0]
-        #         migrants_per_island = int(self.population_size_per_island * self.migration_rate)
-        #         migrants = self.islands[i].truncation_selection(migrants_per_island)
-        #         self.islands[target_island].island.extend(migrants)
-        #         self.islands[target_island].island = self.islands[target_island].truncation_selection(self.population_size_per_island)
-
-
     def evolve(self):
         for generation in range(self.num_generations):
             # Evolve each island
@@ -297,14 +249,14 @@ class IslandModels:
     
         
 # Set parameters
-num_islands = 10
-population_size_per_island = 100
+num_islands = 5
+population_size_per_island = 30
 num_generations = 1000
 migration_rate = 0.3
 mutation_rate = 0.2
 tournament_size = 10
 
-migration_stratergy = 3
+migration_stratergy = 1 #3 doesn't exist yet
 migration_interval = None
 
 if migration_stratergy == 1:
