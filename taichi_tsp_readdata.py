@@ -4,7 +4,7 @@ if __name__ == "__main__":
 	ti.init(arch=ti.cpu, default_fp=ti.f64)
 
 
-from taichi_rng import randint
+from taichi_rng import randint, randint_isl
 
 '''Fetching Data'''
 def read_and_convert_to_dict(FILE_PATH):
@@ -60,6 +60,14 @@ def _generate_genome() -> TYPE_GENOME:
 	genome = TYPE_GENOME([i+1 for i in range(NUM_CITIES)])
 	for i in range(NUM_CITIES):
 		j = randint(0, NUM_CITIES-1)
+		genome[i], genome[j] = genome[j], genome[i]
+	return genome
+
+@ti.func
+def _generate_genome_isl(isl_ind) -> TYPE_GENOME:
+	genome = TYPE_GENOME([i+1 for i in range(NUM_CITIES)])
+	for i in range(NUM_CITIES):
+		j = randint_isl(0, NUM_CITIES-1, isl_ind)
 		genome[i], genome[j] = genome[j], genome[i]
 	return genome
 

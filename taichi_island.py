@@ -1,9 +1,9 @@
 import taichi as ti
 if __name__ == "__main__":
-    ti.init(arch=ti.cpu, default_fp=ti.f64, )
+    ti.init(arch=ti.gpu, default_fp=ti.f64, )
     
-from taichi_rng import randint # similar to random.randint and random.sample
-from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
+from taichi_rng import randint_isl # similar to random.randint and random.sample
+from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover_isl
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
@@ -99,7 +99,7 @@ def get_total_fitness(isl_ind: ti.i32):
 @ti.func
 def initial_population_function(isl_ind: ti.i32):
     for i in range(POPULATION_SIZE):
-        ISL_POPULATIONS[isl_ind, i].initialize()
+        ISL_POPULATIONS[isl_ind, i].initialize_isl(isl_ind)
 
 ########################## RUN ##########################
 
@@ -112,7 +112,7 @@ Migration strategies will go here
 def ring_migration(isl_ind):
     next_island = (isl_ind + 1) % NUM_ISLANDS
     # select a random position to replace
-    replace_index = randint(0, POPULATION_SIZE-1)
+    replace_index = randint_isl(0, POPULATION_SIZE-1, isl_ind)
     ISL_POPULATIONS[next_island, replace_index] = ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]]
 
         
@@ -142,17 +142,17 @@ def i_run_generation(self, isl_ind: ti.i32):
         # this is since print is performed in python scope and not taichi scope which causes
         # this sort of undeterministic behaviour
         # print(PARENT_SELECTION[k].genome, PARENT_SELECTION[k+1].genome)
-        offspring1_genome, offspring2_genome = self.cross_over_function(ISL_PARENT_SELECTIONS[isl_ind, k], ISL_PARENT_SELECTIONS[isl_ind, k+1])
+        offspring1_genome, offspring2_genome = self.cross_over_function(ISL_PARENT_SELECTIONS[isl_ind, k], ISL_PARENT_SELECTIONS[isl_ind, k+1], isl_ind)
         offspring1 = Individual()
         offspring1.initialize_with_genome(offspring1_genome)
         offspring2 = Individual()
         offspring2.initialize_with_genome(offspring2_genome)
 
-        rand_num1, rand_num2 = randint(0,100)/100, randint(0,100)/100
+        rand_num1, rand_num2 = randint_isl(0,100,isl_ind)/100, randint_isl(0,100, isl_ind)/100
         if rand_num1 <= self.mutation_rate:
-            offspring1.mutate()
+            offspring1.mutate_isl(isl_ind)
         if rand_num2 <= self.mutation_rate:
-            offspring2.mutate()
+            offspring2.mutate_isl(isl_ind)
             
         ISL_POPULATIONS[isl_ind, POPULATION_SIZE+k] = offspring1
         ISL_POPULATIONS[isl_ind, POPULATION_SIZE+k+1] = offspring2
@@ -167,9 +167,9 @@ def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, num_iterations: 
         best_index = 0
         for i in range(num_generations):
             # JAADU
-            if (i + 1)%50 == 0:
-                # ti.simt.block.sync()
-                ring_migration(isl_ind)
+            # if (i + 1)%50 == 0:
+            #     ti.simt.block.sync()
+            #     ring_migration(isl_ind)
             EA.run_generation(isl_ind)
             # best_index is always 0 so we don't need this function
             best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
@@ -199,7 +199,7 @@ def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, num_iterations: 
 
 if __name__ == "__main__":
     EvolutionaryAlgorithm.methods = {
-        'cross_over_function': TSP_random_length_crossover,
+        'cross_over_function': TSP_random_length_crossover_isl,
         "parent_selection_function": truncation_selection,
         "survivor_selection_function": truncation_selection,
         'run_generation': i_run_generation,
