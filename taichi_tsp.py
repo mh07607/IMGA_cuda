@@ -5,6 +5,7 @@ from taichi_rng import *
 	
 from taichi_tsp_readdata import NUM_CITIES, distance, TYPE_GENOME, _generate_genome, _generate_genome_isl
 
+LCS_Buffer = ti.field(dtype=ti.i32, shape=(NUM_CITIES, NUM_CITIES))
 
 @ti.dataclass
 class Individual:
@@ -66,23 +67,21 @@ class Individual:
 	
 	@ti.func
 	def LCS(self, individual):		
-		# declaring the array for storing the dp values 
-		L = [[None]*(NUM_CITIES + 1) for i in range(NUM_CITIES + 1)] 
-	
+		# declaring the array for storing the dp values 		
 		"""Following steps build L[m + 1][n + 1] in bottom up fashion 
 		Note: L[i][j] contains length of LCS of X[0..i-1] 
 		and Y[0..j-1]"""
 		for i in range(NUM_CITIES + 1): 
 			for j in range(NUM_CITIES + 1): 
 				if i == 0 or j == 0 : 
-					L[i][j] = 0
+					LCS_Buffer[i][j] = 0
 				elif self.genome[i-1] == individual.genome[j-1]: 
-					L[i][j] = L[i-1][j-1]+1
+					LCS_Buffer[i][j] = L[i-1][j-1]+1
 				else: 
-					L[i][j] = ti.math.max(L[i-1][j], L[i][j-1]) 
+					LCS_Buffer[i][j] = ti.math.max(L[i-1][j], L[i][j-1]) 
 	
 		# L[m][n] contains the length of LCS of X[0..n-1] & Y[0..m-1] 
-		return L[NUM_CITIES][NUM_CITIES]
+		return LCS[NUM_CITIES][NUM_CITIES]
 	
 @ti.dataclass
 class Individual_2_tuple:

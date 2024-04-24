@@ -246,17 +246,17 @@ def LCS_based_migration(self):
 	for isl_ind in range(NUM_ISLANDS):		
 		# select a random position to replace
 		isl_best_indiv = ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]]
-		least_distance_index = -1
-		least_distance = ti.math.inf
+		best_similarity_index = -1
+		best_similarity = 0
 		for other_ind in range(NUM_ISLANDS):
 			if(other_ind == isl_ind):
 				continue
-			distance_bw_best = isl_best_indiv.euclidean_distance(ISL_POPULATIONS[other_ind, BEST_INDICES[other_ind]])
-			if(distance_bw_best < least_distance):
-				least_distance = distance_bw_best
-				lest_distance_index = other_ind
+			similarity_bw_best = isl_best_indiv.LCS(ISL_POPULATIONS[other_ind, BEST_INDICES[other_ind]])
+			if(similarity_bw_best > best_similarity):
+				best_similarity = similarity_bw_best
+				best_similarity_index = other_ind
 		replace_index = randint_isl(0, POPULATION_SIZE-1, isl_ind)
-		ISL_POPULATIONS[least_distance_index, replace_index] = isl_best_indiv
+		ISL_POPULATIONS[best_similarity_index, replace_index] = isl_best_indiv
 
 @ti.func
 def ring_migration(self):
@@ -369,9 +369,9 @@ if __name__ == "__main__":
 		"parent_selection_function": truncation_selection,
 		"survivor_selection_function": truncation_selection,
 		'run_generation': i_run_generation,
-		"migration": hamming_based_migration
+		"migration": LCS_based_migration
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.5)	
-	run_islands(EA, NUM_ISLANDS, 10, 1000)
+	run_islands(EA, NUM_ISLANDS, 10, 200)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
