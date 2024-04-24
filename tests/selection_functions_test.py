@@ -47,7 +47,7 @@ def fitness_proportional_selection(isl_ind, res_opt):
                     ISL_PARENT_SELECTIONS[isl_ind, i] = ISL_POPULATIONS[isl_ind, j - 1]
                     break
     elif(res_opt == 1):
-        pass
+        
 
 
 def test_fitness_selection():

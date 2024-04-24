@@ -104,6 +104,7 @@ def binary_tournament_selection(self, isl_ind: ti.i32, res_opt: ti.i32):
 
 
 
+
 @ti.func
 def random_selection(self, isl_ind: ti.i32, res_opt: ti.i32):    
 	if(res_opt == 0):
@@ -314,8 +315,6 @@ def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_st
 		BEST_INDICES[isl_ind] = best_index
 
 	
-		
-	
 	
 ########################## TESTING ##########################
 # @ti.kernel
@@ -342,6 +341,6 @@ if __name__ == "__main__":
 		"migration": ring_migration
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.5)	
-	run_islands(EA, NUM_ISLANDS, 10, 100)
+	run_islands(EA, NUM_ISLANDS, 10, 1000)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
