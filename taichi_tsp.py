@@ -6,8 +6,6 @@ from taichi_rng import *
 from taichi_tsp_readdata import NUM_CITIES, distance, TYPE_GENOME, _generate_genome, _generate_genome_isl
 
 
-
-
 @ti.dataclass
 class Individual:
 	genome: TYPE_GENOME
@@ -166,5 +164,4 @@ def test_crossover():
 
 if __name__ == "__main__":
 	test_crossover()
-
 	

@@ -342,6 +342,6 @@ if __name__ == "__main__":
 		"migration": ring_migration
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.5)	
-	run_islands(EA, NUM_ISLANDS, 25, 1)
+	run_islands(EA, NUM_ISLANDS, 10, 100)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
