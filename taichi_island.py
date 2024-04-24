@@ -1,6 +1,6 @@
 import taichi as ti
 if __name__ == "__main__":
-    ti.init(arch=ti.cpu, default_fp=ti.f64)
+    ti.init(arch=ti.cpu, default_fp=ti.f64, )
     
 from taichi_rng import randint # similar to random.randint and random.sample
 from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
@@ -167,7 +167,7 @@ def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, num_iterations: 
         best_index = 0
         for i in range(num_generations):
             # JAADU
-            if (num_generations)%50 == 0:
+            if (i + 1)%50 == 0:
                 # ti.simt.block.sync()
                 ring_migration(isl_ind)
             EA.run_generation(isl_ind)
