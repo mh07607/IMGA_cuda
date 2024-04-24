@@ -7,7 +7,7 @@ from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
-NUM_ISLANDS = 64
+NUM_ISLANDS = 128
 
 # NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
 NUM_OFFSPRINGS = 10
@@ -194,7 +194,7 @@ def LCS(X, Y):
 	return L[m][n] 
 
 @ti.func
-def distance_based_migration(self):
+def hamming_based_migration(self):
 	'''
 	  Migration based on lowest 
 	'''
@@ -204,7 +204,7 @@ def distance_based_migration(self):
 		least_distance_index = -1
 		least_distance = ti.math.inf
 		for other_ind in range(NUM_ISLANDS):
-			distance_bw_best = isl_best_indiv.distance(ISL_POPULATIONS[other_ind, BEST_INDICES[other_ind]])
+			distance_bw_best = isl_best_indiv.hamming_distance(ISL_POPULATIONS[other_ind, BEST_INDICES[other_ind]])
 			if(distance_bw_best < least_distance):
 				least_distance = distance_bw_best
 				lest_distance_index = other_ind
@@ -335,7 +335,7 @@ def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_st
 if __name__ == "__main__":
 	EvolutionaryAlgorithm.methods = {
 		'cross_over_function': TSP_random_length_crossover,
-		"parent_selection_function": binary_tournament_selection,
+		"parent_selection_function": truncation_selection,
 		"survivor_selection_function": truncation_selection,
 		'run_generation': i_run_generation,
 		"migration": ring_migration
