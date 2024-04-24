@@ -58,11 +58,11 @@ class Individual:
 
 	@ti.func
 	def hamming_distance(self, individual):
-		result = ti.Vector([0 for _ in range(NUM_CITIES)])
+		difference = 0
 		for i in range(NUM_CITIES):
-			if(self.genome[i] == individual.genome[i]):
-				result[i] = 1
-		return result
+			if(self.genome[i] != individual.genome[i]):
+				difference += 1
+		return difference
 	
 @ti.dataclass
 class Individual_2_tuple:

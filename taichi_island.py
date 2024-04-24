@@ -2,7 +2,7 @@ import taichi as ti
 if __name__ == "__main__":
 	ti.init(arch=ti.gpu, default_fp=ti.f64)
 	
-from taichi_rng import randint, randint_isl # similar to random.randint and random.sample
+from taichi_rng import randint, randint_isl, randfloat_isl # similar to random.randint and random.sample
 from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
@@ -101,8 +101,37 @@ def binary_tournament_selection(self, isl_ind: ti.i32, res_opt: ti.i32):
 		for i in range(POPULATION_SIZE):			
 			ISL_POPULATIONS[isl_ind, i] = ISL_SELECTION_RESULTS[isl_ind, i]
 		
-
-
+@ti.func
+def fitness_proportional_selection(isl_ind, res_opt):
+    if(res_opt == 0):
+        population_proportions = ti.Vector([0.0 for _ in range(POPULATION_SIZE)])
+        cumulative_fitness = 0.0            
+        for i in range(POPULATION_SIZE):
+            individual = ISL_POPULATIONS[isl_ind, i]        
+            cumulative_fitness += (1/individual) # change to fitness
+            population_proportions[i] = cumulative_fitness        
+        total_fitness = cumulative_fitness            
+        for i in range(NUM_OFFSPRINGS):
+            random_float = randfloat_isl(0, total_fitness, isl_ind)
+            for j in range(POPULATION_SIZE-1):
+                if population_proportions[j+1] > random_float:
+                    ISL_PARENT_SELECTIONS[isl_ind, i] = ISL_POPULATIONS[isl_ind, j - 1]
+                    break
+    elif(res_opt == 1):
+        population_proportions = ti.Vector([0.0 for _ in range(POPULATION_SIZE + NUM_OFFSPRINGS)])
+        cumulative_fitness = 0.0            
+        for i in range(POPULATION_SIZE + NUM_OFFSPRINGS):
+            individual = ISL_POPULATIONS[isl_ind, i] 
+            ISL_SELECTION_RESULTS[isl_ind, i] = individual
+            cumulative_fitness += (1/individual) # change to fitness
+            population_proportions[i] = cumulative_fitness        
+        total_fitness = cumulative_fitness            
+        for i in range(POPULATION_SIZE):
+            random_float = randfloat_isl(0, total_fitness)
+            for j in range(POPULATION_SIZE):
+                if population_proportions[j+1] > random_float:
+                    ISL_POPULATIONS[isl_ind, i] = ISL_SELECTION_RESULTS[isl_ind, j - 1]
+                    break
 
 
 @ti.func
@@ -125,8 +154,6 @@ def random_selection(self, isl_ind: ti.i32, res_opt: ti.i32):
 			for i in range(POPULATION_SIZE):
 				ISL_POPULATIONS[isl_ind, i] = ISL_SELECTION_RESULTS[isl_ind, i]
 		
-
-
 @ti.func
 def rank_selection(self, isl_ind: ti.i32, res_opt: ti.i32):    
 	pass
@@ -207,7 +234,7 @@ def hamming_based_migration(self):
 			distance_bw_best = isl_best_indiv.hamming_distance(ISL_POPULATIONS[other_ind, BEST_INDICES[other_ind]])
 			if(distance_bw_best < least_distance):
 				least_distance = distance_bw_best
-				lest_distance_index = other_ind
+				least_distance_index = other_ind
 		replace_index = randint_isl(0, POPULATION_SIZE-1, isl_ind)
 		ISL_POPULATIONS[least_distance_index, replace_index] = isl_best_indiv
 
@@ -338,9 +365,9 @@ if __name__ == "__main__":
 		"parent_selection_function": truncation_selection,
 		"survivor_selection_function": truncation_selection,
 		'run_generation': i_run_generation,
-		"migration": ring_migration
+		"migration": hamming_based_migration
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.5)	
-	run_islands(EA, NUM_ISLANDS, 10, 1000)
+	run_islands(EA, NUM_ISLANDS, 10, 100)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)

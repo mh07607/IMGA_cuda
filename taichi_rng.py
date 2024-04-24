@@ -32,6 +32,10 @@ def randint(a: ti.i32, b: ti.i32) -> ti.i32:
 def randint_isl(a: ti.i32, b: ti.i32, seq: ti.i32) -> ti.i32:
     return int(a + uniform_float_isl(seq) * (b - a))
 
+@ti.func
+def randfloat_isl(a: ti.f64, b: ti.f64, seq: ti.i32) -> ti.f64:
+    return float(a + uniform_float_isl(seq) * (b - a))
+
 
 
 def generate_random():

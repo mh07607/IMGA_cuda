@@ -42,22 +42,36 @@ def fitness_proportional_selection(isl_ind, res_opt):
         total_fitness = cumulative_fitness            
         for i in range(NUM_OFFSPRINGS):
             random_float = np.random.uniform(0, total_fitness)
-            for j in range(POPULATION_SIZE):
+            for j in range(POPULATION_SIZE-1):
                 if population_proportions[j+1] > random_float:
                     ISL_PARENT_SELECTIONS[isl_ind, i] = ISL_POPULATIONS[isl_ind, j - 1]
                     break
     elif(res_opt == 1):
+        population_proportions = [0.0 for _ in range(POPULATION_SIZE + NUM_OFFSPRINGS)]
+        cumulative_fitness = 0.0            
+        for i in range(POPULATION_SIZE + NUM_OFFSPRINGS):
+            individual = ISL_POPULATIONS[isl_ind, i] 
+            ISL_SELECTION_RESULTS[isl_ind, i] = individual
+            cumulative_fitness += (1/individual) # change to fitness
+            population_proportions[i] = cumulative_fitness        
+        total_fitness = cumulative_fitness            
+        for i in range(POPULATION_SIZE):
+            random_float = np.random.uniform(0, total_fitness)
+            for j in range(POPULATION_SIZE):
+                if population_proportions[j+1] > random_float:
+                    ISL_POPULATIONS[isl_ind, i] = ISL_SELECTION_RESULTS[isl_ind, j - 1]
+                    break
         
 
 
 def test_fitness_selection():
+    print(ISL_POPULATIONS)
     print(ISL_PARENT_SELECTIONS)
     fitness_proportional_selection(isl_ind=0, res_opt=0)
-    print(ISL_PARENT_SELECTIONS)
-    # print(ISL_POPULATIONS)
-    # fitness_proportional_selection(isl_ind=0, res_opt=1)
-    # print(ISL_SELECTION_RESULTS)
-    # print(ISL_POPULATIONS)
+    print(ISL_PARENT_SELECTIONS)    
+    fitness_proportional_selection(isl_ind=0, res_opt=1)
+    print(ISL_SELECTION_RESULTS)
+    print(ISL_POPULATIONS)
 
 
 def test_random_selection():
