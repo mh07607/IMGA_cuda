@@ -44,7 +44,7 @@ def read_random():
     with open("random.txt", "r") as file:
         numbers = list(map(float, file.readlines()))
         for seq in range(NUM_SEQUENCES):
-            print(len(numbers))
+            # print(len(numbers))
             indices = np.arange(NUM_RANDOM_NUMBERS)
             np.random.shuffle(indices)
             for i in range(NUM_RANDOM_NUMBERS):
