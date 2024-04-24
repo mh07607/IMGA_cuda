@@ -151,6 +151,7 @@ def i_run_generation(self, isl_ind: ti.i32):
 def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, num_iterations: ti.i32, num_generations: ti.i32):
     for isl_ind in range(num_islands):
         initial_population_function(isl_ind)
+        print("initial population for island", isl_ind, "is", get_total_fitness(isl_ind))
         best_index = 0
         for i in range(num_generations):
             # JAADU
