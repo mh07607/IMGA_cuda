@@ -155,8 +155,8 @@ def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, num_iterations: 
         for i in range(num_generations):
             # JAADU
             # if (i)%50 == 0:
-                # ti.simt.block.sync()
-                # ring_migration(isl_ind)
+            #     ti.simt.block.sync()
+            #     ring_migration(isl_ind)
             EA.run_generation(isl_ind)
             # best_index is always 0 so we don't need this function
             best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
@@ -194,4 +194,5 @@ if __name__ == "__main__":
     EA = EvolutionaryAlgorithm(mutation_rate=0.5)
     run_islands(EA, NUM_ISLANDS, 10, 1000)
     for isl_ind in range(NUM_ISLANDS):
+        print(BEST_INDICES[isl_ind])
         print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
