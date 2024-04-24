@@ -7,10 +7,10 @@ from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
-NUM_ISLANDS = 1024
+NUM_ISLANDS = 64
 
 # NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
-NUM_OFFSPRINGS = 4
+NUM_OFFSPRINGS = 10
 
 ISL_POPULATIONS = Individual.field(shape=(NUM_ISLANDS, POPULATION_SIZE + NUM_OFFSPRINGS))
 
@@ -342,6 +342,6 @@ if __name__ == "__main__":
 		"migration": ring_migration
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.5)	
-	run_islands(EA, NUM_ISLANDS, 1, 100)
+	run_islands(EA, NUM_ISLANDS, 25, 1)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
