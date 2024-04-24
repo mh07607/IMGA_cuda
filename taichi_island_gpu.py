@@ -163,6 +163,7 @@ def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, num_iterations: 
             best_index = ti.i32(best_index)
             
         BEST_INDICES[isl_ind] = best_index
+        print("best index for island", isl_ind, "is", best_index)
 
     
         
