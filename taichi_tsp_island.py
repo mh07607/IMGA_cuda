@@ -23,7 +23,7 @@ ISL_PARENT_SELECTIONS = Individual.field(shape=(NUM_ISLANDS, NUM_OFFSPRINGS))
 ISL_SELECTION_RESULTS = Individual.field(shape=(NUM_ISLANDS, POPULATION_SIZE + NUM_OFFSPRINGS))
 
 BEST_INDICES = ti.field(dtype=ti.i32, shape=(NUM_ISLANDS))
-BEST_INDICES_GENERATION = Individual.field(dtype=ti.i32, shape=(50, NUM_ISLANDS))
+BEST_INDICES_GENERATION = Individual.field(shape=(50, NUM_ISLANDS))
 
 @ti.dataclass
 class EvolutionaryAlgorithm:
