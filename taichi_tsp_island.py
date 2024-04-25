@@ -4,6 +4,9 @@ if __name__ == "__main__":
 	
 from taichi_rng import randint, randint_isl, randfloat_isl # similar to random.randint and random.sample
 from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
+import numpy as np
+import matplotlib.pyplot as plt
+import time
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
@@ -19,6 +22,7 @@ ISL_PARENT_SELECTIONS = Individual.field(shape=(NUM_ISLANDS, NUM_OFFSPRINGS))
 ISL_SELECTION_RESULTS = Individual.field(shape=(NUM_ISLANDS, POPULATION_SIZE + NUM_OFFSPRINGS))
 
 BEST_INDICES = ti.field(dtype=ti.i32, shape=(NUM_ISLANDS))
+BEST_INDICES_GENERATION = ti.field(dtype=ti.i32, shape=(50, NUM_ISLANDS))
 
 @ti.dataclass
 class EvolutionaryAlgorithm:
@@ -317,8 +321,8 @@ def i_run_generation(self, isl_ind: ti.i32):
 		
 @ti.kernel
 def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: ti.i32, num_generations: ti.i32):
-	ti.block_local(ISL_POPULATIONS)
-	ti.loop_config(block_dim=NUM_ISLANDS)
+	# ti.block_local(ISL_POPULATIONS)
+	# ti.loop_config(block_dim=NUM_ISLANDS)
 	for isl_ind in range(num_islands):
 		initial_population_function(isl_ind)
 		best_index = 0
@@ -334,7 +338,8 @@ def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: 
 			best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
 			best_index = ti.i32(best_index)
 			
-		BEST_INDICES[isl_ind] = best_index
+			BEST_INDICES_GENERATION[i, isl_ind] = best_index
+		BEST_INDICES[isl_ind] = best_index		
 
 @ti.kernel
 def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: ti.i32, num_generations: ti.i32):
@@ -350,7 +355,7 @@ def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_st
 			best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
 			best_index = ti.i32(best_index)
 			
-		BEST_INDICES[isl_ind] = best_index
+		BEST_INDICES[isl_ind] = best_index		
 
 	
 	
@@ -378,7 +383,23 @@ if __name__ == "__main__":
 		'run_generation': i_run_generation,
 		"migration": ring_migration
 	}	
-	EA = EvolutionaryAlgorithm(mutation_rate=0.5)	
-	run_islands(EA, NUM_ISLANDS, 50, 1000)
+	EA = EvolutionaryAlgorithm(mutation_rate=0.5)
+	starting_time = time.time()	
+	run_islands(EA, NUM_ISLANDS, 5, 50)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
+	ending_time = time.time() - starting_time
+	print(ending_time)
+
+	''' GRAPHING '''
+	x = np.arange(1, 50+1, 1)
+	y = []
+	for i in range(50):
+		y[i] = sum(BEST_INDICES_GENERATION[i])
+
+	plt.plot(x, y)
+	plt.xlabel("Num generations")
+	plt.ylabel("Best fitness")
+	plt.show()
+	
+	
