@@ -7,10 +7,11 @@ from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import math
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
-NUM_ISLANDS = 128
+NUM_ISLANDS = 32
 
 # NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
 NUM_OFFSPRINGS = 10
@@ -22,7 +23,7 @@ ISL_PARENT_SELECTIONS = Individual.field(shape=(NUM_ISLANDS, NUM_OFFSPRINGS))
 ISL_SELECTION_RESULTS = Individual.field(shape=(NUM_ISLANDS, POPULATION_SIZE + NUM_OFFSPRINGS))
 
 BEST_INDICES = ti.field(dtype=ti.i32, shape=(NUM_ISLANDS))
-BEST_INDICES_GENERATION = ti.field(dtype=ti.i32, shape=(50, NUM_ISLANDS))
+BEST_INDICES_GENERATION = ti.field(dtype=ti.i32, shape=(100, NUM_ISLANDS))
 
 @ti.dataclass
 class EvolutionaryAlgorithm:
@@ -385,17 +386,22 @@ if __name__ == "__main__":
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.5)
 	starting_time = time.time()	
-	run_islands(EA, NUM_ISLANDS, 5, 50)
+	run_islands(EA, NUM_ISLANDS, 5, 100)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
 	ending_time = time.time() - starting_time
 	print(ending_time)
 
 	''' GRAPHING '''
-	x = np.arange(1, 50+1, 1)
+	x = np.arange(1, 100+1, 1)
 	y = []
-	for i in range(50):
-		y[i] = sum(BEST_INDICES_GENERATION[i])
+	for i in range(100):
+		best_fitness = math.inf
+		for j in range(NUM_ISLANDS):
+			current = BEST_INDICES_GENERATION[i, j]
+			if(current < best_fitness):
+				best_fitness = current
+		y[i] = best_fitness
 
 	plt.plot(x, y)
 	plt.xlabel("Num generations")
