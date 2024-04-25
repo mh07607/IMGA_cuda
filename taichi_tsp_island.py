@@ -402,7 +402,7 @@ if __name__ == "__main__":
 			current = BEST_INDICES_GENERATION[i, j].fitness
 			if(current < best_fitness):
 				best_fitness = current
-		y[i] = best_fitness
+		y.append(best_fitness)
 
 	plt.plot(x, y)
 	plt.xlabel("Num generations")
