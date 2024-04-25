@@ -23,7 +23,7 @@ ISL_PARENT_SELECTIONS = Individual.field(shape=(NUM_ISLANDS, NUM_OFFSPRINGS))
 ISL_SELECTION_RESULTS = Individual.field(shape=(NUM_ISLANDS, POPULATION_SIZE + NUM_OFFSPRINGS))
 
 BEST_INDICES = ti.field(dtype=ti.i32, shape=(NUM_ISLANDS))
-BEST_INDICES_GENERATION = Individual.field(dtype=ti.i32, shape=(100, NUM_ISLANDS))
+BEST_INDICES_GENERATION = Individual.field(dtype=ti.i32, shape=(50, NUM_ISLANDS))
 
 @ti.dataclass
 class EvolutionaryAlgorithm:
@@ -386,17 +386,17 @@ if __name__ == "__main__":
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.5)
 	starting_time = time.time()	
-	run_islands(EA, NUM_ISLANDS, 10, 100)
+	run_islands(EA, NUM_ISLANDS, 5, 50)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
 	ending_time = time.time() - starting_time
 	print(ending_time)
 
 	''' GRAPHING '''
-	x = np.arange(1, 100+1, 1)
+	x = np.arange(1, 50+1, 1)
 	y = []	
 
-	for i in range(100):
+	for i in range(50):
 		best_fitness = math.inf
 		for j in range(NUM_ISLANDS):
 			current = BEST_INDICES_GENERATION[i, j].fitness
