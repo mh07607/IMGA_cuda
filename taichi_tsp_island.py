@@ -407,6 +407,7 @@ if __name__ == "__main__":
 	plt.plot(x, y)
 	plt.xlabel("Num generations")
 	plt.ylabel("Best fitness")
+	plt.savefig("yeet.png")
 	plt.show()
 	
 	
