@@ -220,6 +220,11 @@ Migration strategies will go here
 # 	# L[m][n] contains the length of LCS of X[0..n-1] & Y[0..m-1] 
 # 	return L[m][n] 
 
+'''
+TO-DO
+1. In all migration strategies, We need to make a buffer of best individuals
+separately otherwise it may get overwritten by migrated individuals
+'''
 @ti.func
 def hamming_based_migration(self):
 	'''
@@ -369,9 +374,9 @@ if __name__ == "__main__":
 		"parent_selection_function": truncation_selection,
 		"survivor_selection_function": truncation_selection,
 		'run_generation': i_run_generation,
-		"migration": LCS_based_migration
+		"migration": ring_migration
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.5)	
-	run_islands(EA, NUM_ISLANDS, 10, 200)
+	run_islands(EA, NUM_ISLANDS, 50, 1000)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)

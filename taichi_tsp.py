@@ -81,13 +81,7 @@ class Individual:
 					LCS_Buffer[i, j] = ti.math.max(LCS_Buffer[i-1, j], LCS_Buffer[i, j-1]) 
 	
 		# L[m][n] contains the length of LCS of X[0..n-1] & Y[0..m-1] 
-		return LCS_Buffer[NUM_CITIES, NUM_CITIES]
-	
-@ti.dataclass
-class Individual_2_tuple:
-	first: Individual
-	second: Individual
-	
+		return LCS_Buffer[NUM_CITIES, NUM_CITIES]	
 
 
 @ti.func 
@@ -100,7 +94,7 @@ def IN(iterable, length, element) -> ti.i32:
 
 @ti.func
 def TSP_random_length_crossover(self, parent1, parent2, isl_ind:int):
-	start = randint_isl(1, NUM_CITIES-2, isl_ind)
+	start = randint_isl(0, NUM_CITIES-2, isl_ind)
 	end = randint_isl(start, NUM_CITIES-1, isl_ind)
 
 	offspring1_genome = ti.Vector([-1 for _ in range(NUM_CITIES)], dt=ti.i32)
