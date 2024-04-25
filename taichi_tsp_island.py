@@ -318,6 +318,7 @@ def i_run_generation(self, isl_ind: ti.i32):
 @ti.kernel
 def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: ti.i32, num_generations: ti.i32):
 	ti.block_local(ISL_POPULATIONS)
+	ti.loop_config(block_dim=NUM_ISLANDS)
 	for isl_ind in range(num_islands):
 		initial_population_function(isl_ind)
 		best_index = 0
