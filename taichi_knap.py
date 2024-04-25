@@ -36,7 +36,7 @@ class Individual:
 		rand_index1 = randint(0, self.genome_size)
 		rand_index2 = randint(0, self.genome_size)
 		self.genome[rand_index1], self.genome[rand_index2] = self.genome[rand_index2], self.genome[rand_index1]
-		fitness = calculate_fitness(self.genome, self.genome_size)
+		fitness = calculate_fitness(self.genome)
 		if rand_index1 != rand_index2:
 			if ti.abs(fitness - self.fitness) < 0.001:
 				print("ERROR: mutation not working properly")
@@ -47,7 +47,7 @@ class Individual:
 		rand_index1 = randint_isl(0, self.genome_size, isl_ind)
 		rand_index2 = randint_isl(0, self.genome_size, isl_ind)
 		self.genome[rand_index1], self.genome[rand_index2] = self.genome[rand_index2], self.genome[rand_index1]
-		fitness = calculate_fitness(self.genome, self.genome_size)
+		fitness = calculate_fitness(self.genome)
 		if rand_index1 != rand_index2:
 			if ti.abs(fitness - self.fitness) < 0.001:
 				print("ERROR: mutation not working properly")
