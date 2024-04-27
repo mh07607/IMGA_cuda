@@ -46,11 +46,11 @@ class Individual:
 		self.fitness = fitness
 		
 	@ti.func
-	def euclidean_fitness(self, individual):
-		return ti.math.fitness(self.genome, individual.genome)
+	def euclidean_distance(self, individual):
+		return ti.math.distance(self.genome, individual.genome)
 
 	@ti.func
-	def hamming_fitness(self, individual):
+	def hamming_distance(self, individual):
 		difference = 0
 		for i in range(TOTAL_ITEMS):
 			if(self.genome[i] != individual.genome[i]):
