@@ -113,7 +113,7 @@ def fitness_proportional_selection(self, isl_ind, res_opt):
         cumulative_fitness = 0.0            
         for i in range(POPULATION_SIZE):
             individual = ISL_POPULATIONS[isl_ind, i]        
-            cumulative_fitness += (1/individual) # change to fitness
+            cumulative_fitness += (1/individual.fitness)
             population_proportions[i] = cumulative_fitness        
         total_fitness = cumulative_fitness            
         for i in range(NUM_OFFSPRINGS):
@@ -128,7 +128,7 @@ def fitness_proportional_selection(self, isl_ind, res_opt):
         for i in range(POPULATION_SIZE + NUM_OFFSPRINGS):
             individual = ISL_POPULATIONS[isl_ind, i] 
             ISL_SELECTION_RESULTS[isl_ind, i] = individual
-            cumulative_fitness += (1/individual) # change to fitness
+            cumulative_fitness += (1/individual.fitness)
             population_proportions[i] = cumulative_fitness        
         total_fitness = cumulative_fitness            
         for i in range(POPULATION_SIZE):
