@@ -389,12 +389,14 @@ if __name__ == "__main__":
 		run_islands(EA, NUM_ISLANDS, 5, NUM_GENERATIONS)
 	else:
 		run_islands_cpu(EA, NUM_ISLANDS, 5, NUM_GENERATIONS)
-	for isl_ind in range(NUM_ISLANDS):
-		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
+	# for isl_ind in range(NUM_ISLANDS):
+	# 	print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
 	ending_time = time.time() - starting_time
 
 	with open("time.txt", "a") as file:
 		file.write(device + " " + str(NUM_ISLANDS) + " " + str(ending_time) + "\n")
+	
+	print(device, NUM_ISLANDS, "done")
 
 	# print("Time taken", ending_time)
 
