@@ -17,7 +17,7 @@ import math
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
 NUM_ISLANDS = int(sys.argv[1])
-NUM_GENERATIONS = 1000
+NUM_GENERATIONS = 2000
 
 # NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
 NUM_OFFSPRINGS = 10
@@ -382,7 +382,7 @@ if __name__ == "__main__":
 		"parent_selection_function": truncation_selection,
 		"survivor_selection_function": truncation_selection,
 		'run_generation': i_run_generation,
-		"migration": LCS_based_migration
+		"migration": ring_migration
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.9)
 	starting_time = time.time()	

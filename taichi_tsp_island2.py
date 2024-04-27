@@ -183,7 +183,7 @@ def get_avg_fitnes_n_best_indiv_index(isl_ind: ti.i32):
 			best_index = i
 		cumulative_fitness += individual.fitness
 	average_fitness = cumulative_fitness/POPULATION_SIZE
-	# BUG: note that best_index is an integer but returned as a float
+	# note that best_index is an integer but returned as a float
 	return ti.Vector([best_index, average_fitness], dt=ti.f64)
 
 @ti.func

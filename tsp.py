@@ -102,19 +102,18 @@ def TSP_random_length_crossover(parent1: TSP_Path, parent2: TSP_Path):
 
 
 class TSP_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
-	def run(self, num_iterations: int=10, num_generations: int=1000) -> tuple:
+	def run(self, x_offset, num_iterations: int=10, num_generations: int=1000) -> tuple:
 		best_fitnesses = [[] for _ in range(num_iterations)]
-		average_fitnesses = [[] for _ in range(num_iterations)]
-		x_offset = num_generations // 20
+		average_fitnesses = [[] for _ in range(num_iterations)]		
 
 		for j in range(num_iterations):
 			for i in tqdm(range(num_generations), desc='Iteration '+str(j+1)):
 				self.run_generation()
-				if(i % x_offset == 0):
-					best_individual, average_fitness = self.get_average_and_best_individual()
-					print("\nAverage fitness: ", average_fitness, ", Best value: ", best_individual.fitness)
-					best_fitnesses[j].append(best_individual.fitness)
-					average_fitnesses[j].append(average_fitness)
+				# if(i % x_offset == 0):
+				best_individual, average_fitness = self.get_average_and_best_individual()
+				# print("\nAverage fitness: ", average_fitness, ", Best value: ", best_individual.fitness)
+				best_fitnesses[j].append(best_individual.fitness)
+				average_fitnesses[j].append(average_fitness)
 
 			self.population = self.initial_population_function(self.population_size)
 
@@ -123,33 +122,33 @@ class TSP_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
 
 
 '''Test Run'''
-tsp = TSP_EvolutionaryAlgorithm(
-      initial_population_function = random_intercity_paths,
-      parent_selection_function = 'truncation',
-      survivor_selection_function = 'truncation',
-      cross_over_function = TSP_random_length_crossover,
-      population_size = 100,
-      mutation_rate = 0.5,
-      num_offsprings=2
-      )
-tsp.run()
+# tsp = TSP_EvolutionaryAlgorithm(
+#       initial_population_function = random_intercity_paths,
+#       parent_selection_function = 'truncation',
+#       survivor_selection_function = 'truncation',
+#       cross_over_function = TSP_random_length_crossover,
+#       population_size = 100,
+#       mutation_rate = 0.5,
+#       num_offsprings=2
+#       )
+# tsp.run()
 
 
 
 ''' Generating Graphs '''
 selection_pairs = [
-                    ('fitness', 'random', 100, 0.5, 50),
-                    ('binary', 'truncation', 100, 0.9, 20), 
-                    ('truncation', 'truncation', 100, 0.9, 50), 
-                    ('random', 'random', 100, 0.5, 10),
-                    ('fitness', 'rank', 100, 0.5, 50),
-                    ('truncation', 'random', 100, 0.5, 50),
-                    ('rank', 'binary', 100, 0.5, 100),
+                    # ('fitness', 'random', 100, 0.5, 50),
+                    # ('binary', 'truncation', 100, 0.9, 20), 
+                    ('truncation', 'truncation', 100, 0.9, 10), 
+                    # ('random', 'random', 100, 0.5, 10),
+                    # ('fitness', 'rank', 100, 0.5, 50),
+                    # ('truncation', 'random', 100, 0.5, 50),
+                    # ('rank', 'binary', 100, 0.5, 100),
                   ]
 
-num_generations = 400
+num_generations = 2000
 num_iterations = 1
-x_offset = num_generations // 20
+x_offset = num_generations // 1
 
 
 for parent_selection, survivor_selection, population_size, mutation_rate, num_offsprings in selection_pairs:
@@ -164,7 +163,7 @@ for parent_selection, survivor_selection, population_size, mutation_rate, num_of
 		num_offsprings=num_offsprings
 	)
 
-	best_individual, best_fitnesses, average_fitnesses = tsp.run(num_generations=num_generations, num_iterations=num_iterations)
+	best_individual, best_fitnesses, average_fitnesses = tsp.run(x_offset=x_offset, num_generations=num_generations, num_iterations=num_iterations)
 	best_fitnesses = np.array(best_fitnesses).T.tolist()
 	average_fitnesses = np.array(average_fitnesses).T.tolist()
 	x = []
