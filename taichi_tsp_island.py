@@ -1,6 +1,6 @@
 import taichi as ti
 if __name__ == "__main__":
-	ti.init(arch=ti.gpu, default_fp=ti.f64)
+	ti.init(arch=ti.cpu, default_fp=ti.f64)
 	
 from taichi_rng import randint, randint_isl, randfloat_isl # similar to random.randint and random.sample
 from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
@@ -11,7 +11,7 @@ import math
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
-NUM_ISLANDS = 64
+NUM_ISLANDS = 2
 
 # NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
 NUM_OFFSPRINGS = 10
@@ -386,7 +386,7 @@ if __name__ == "__main__":
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.5)
 	starting_time = time.time()	
-	run_islands(EA, NUM_ISLANDS, 5, 50)
+	run_islands_cpu(EA, NUM_ISLANDS, 5, 50)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
 	ending_time = time.time() - starting_time
