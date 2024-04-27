@@ -386,10 +386,11 @@ if __name__ == "__main__":
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.9)
 	starting_time = time.time()	
+	migration_step = 25
 	if(device == "gpu"):
-		run_islands(EA, NUM_ISLANDS, 5, NUM_GENERATIONS)
+		run_islands(EA, NUM_ISLANDS, migration_step, NUM_GENERATIONS)
 	else:
-		run_islands_cpu(EA, NUM_ISLANDS, 5, NUM_GENERATIONS)
+		run_islands_cpu(EA, NUM_ISLANDS, migration_step, NUM_GENERATIONS)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
 	ending_time = time.time() - starting_time
