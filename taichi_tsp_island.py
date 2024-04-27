@@ -379,7 +379,7 @@ def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_st
 if __name__ == "__main__":
 	EvolutionaryAlgorithm.methods = {
 		'cross_over_function': TSP_random_length_crossover,
-		"parent_selection_function": fitness_proportional_selection,
+		"parent_selection_function": truncation_selection,
 		"survivor_selection_function": truncation_selection,
 		'run_generation': i_run_generation,
 		"migration": ring_migration
