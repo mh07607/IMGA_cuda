@@ -16,7 +16,7 @@ import math
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
-NUM_ISLANDS = sys.argv[1]
+NUM_ISLANDS = int(sys.argv[1])
 NUM_GENERATIONS = 50
 
 # NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
