@@ -3,7 +3,7 @@ import sys
 	
 device = sys.argv[2]
 if(device == "gpu"):
-	ti.init(arch=ti.cpu, default_fp=ti.f64)
+	ti.init(arch=ti.gpu, default_fp=ti.f64)
 else:
     ti.init(arch=ti.cpu, default_fp=ti.f64)
 	
