@@ -132,7 +132,7 @@ def fitness_proportional_selection(self, isl_ind, res_opt):
             population_proportions[i] = cumulative_fitness        
         total_fitness = cumulative_fitness            
         for i in range(POPULATION_SIZE):
-            random_float = randfloat_isl(0, total_fitness)
+            random_float = randfloat_isl(0, total_fitness, isl_ind)
             for j in range(POPULATION_SIZE):
                 if population_proportions[j+1] > random_float:
                     ISL_POPULATIONS[isl_ind, i] = ISL_SELECTION_RESULTS[isl_ind, j - 1]
