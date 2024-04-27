@@ -1,6 +1,11 @@
 import taichi as ti
-if __name__ == "__main__":
+import sys
+	
+device = sys.argv[2]
+if(device == "gpu"):
 	ti.init(arch=ti.cpu, default_fp=ti.f64)
+else:
+    ti.init(arch=ti.cpu, default_fp=ti.f64)
 	
 from taichi_rng import randint, randint_isl, randfloat_isl # similar to random.randint and random.sample
 from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
@@ -11,7 +16,8 @@ import math
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
-NUM_ISLANDS = 2
+NUM_ISLANDS = sys.argv[1]
+NUM_GENERATIONS = 50
 
 # NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
 NUM_OFFSPRINGS = 10
@@ -377,33 +383,36 @@ if __name__ == "__main__":
 		'run_generation': i_run_generation,
 		"migration": ring_migration
 	}	
-	EA = EvolutionaryAlgorithm(mutation_rate=0.5)
+	EA = EvolutionaryAlgorithm(mutation_rate=0.9)
 	starting_time = time.time()	
-	run_islands_cpu(EA, NUM_ISLANDS, 5, 50)
+	if(device == "gpu"):
+		run_islands(EA, NUM_ISLANDS, 5, NUM_GENERATIONS)
+	else:
+		run_islands_cpu(EA, NUM_ISLANDS, 5, NUM_GENERATIONS)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
 	ending_time = time.time() - starting_time
 
 	with open("time.txt", "a") as file:
-		file.write(device + " " + str(NUM_ISLANDS) + " " + str(elapsed_time) + "\n")
+		file.write(device + " " + str(NUM_ISLANDS) + " " + str(ending_time) + "\n")
 
-	print("Time taken", ending_time)
+	# print("Time taken", ending_time)
 
 	''' GRAPHING '''
-	x = np.arange(1, 50+1, 1)
-	y = []	
+	# x = np.arange(1, NUM_GENERATIONS+1, 1)
+	# y = []	
 
-	for i in range(50):
-		best_fitness = math.inf
-		for j in range(NUM_ISLANDS):
-			current = BEST_INDICES_GENERATION[i, j].fitness
-			if(current < best_fitness):
-				best_fitness = current
-		y.append(best_fitness)
+	# for i in range(NUM_GENERATIONS):
+	# 	best_fitness = math.inf
+	# 	for j in range(NUM_ISLANDS):
+	# 		current = BEST_INDICES_GENERATION[i, j].fitness
+	# 		if(current < best_fitness):
+	# 			best_fitness = current
+	# 	y.append(best_fitness)
 
-	plt.plot(x, y)
-	plt.xlabel("Num generations")
-	plt.ylabel("Best fitness")
-	plt.savefig("yeet.png")	
+	# plt.plot(x, y)
+	# plt.xlabel("Num generations")
+	# plt.ylabel("Best fitness")
+	# plt.savefig("yeet.png")	
 	
 	
