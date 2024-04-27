@@ -29,7 +29,7 @@ ISL_PARENT_SELECTIONS = Individual.field(shape=(NUM_ISLANDS, NUM_OFFSPRINGS))
 ISL_SELECTION_RESULTS = Individual.field(shape=(NUM_ISLANDS, POPULATION_SIZE + NUM_OFFSPRINGS))
 
 BEST_INDICES = ti.field(dtype=ti.i32, shape=(NUM_ISLANDS))
-BEST_INDICES_GENERATION = Individual.field(shape=(50, NUM_ISLANDS, 2))
+BEST_FITNESS_GENERATION = ti.field(dtype=ti.f64, shape=(NUM_GENERATIONS, NUM_ISLANDS, 2))
 
 @ti.dataclass
 class EvolutionaryAlgorithm:
@@ -337,7 +337,8 @@ def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: 
 			best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
 			best_index = ti.i32(best_index)
 			
-			BEST_INDICES_GENERATION[i, isl_ind, 0] = ISL_POPULATIONS[isl_ind, best_index]
+			BEST_FITNESS_GENERATION[i, isl_ind, 0] = ISL_POPULATIONS[isl_ind, best_index].fitness
+			BEST_FITNESS_GENERATION[i, isl_ind, 1] = avg_fitness
 
 		BEST_INDICES[isl_ind] = best_index		
 
@@ -393,28 +394,33 @@ if __name__ == "__main__":
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
 	ending_time = time.time() - starting_time
 
-	with open("time.txt", "a") as file:
-		file.write(device + " " + str(NUM_ISLANDS) + " " + str(ending_time) + "\n")
+	# with open("time.txt", "a") as file:
+	# 	file.write(device + " " + str(NUM_ISLANDS) + " " + str(ending_time) + "\n")
 	
 	print(device, NUM_ISLANDS, "done")
 
 	print("Time taken", ending_time)
 
 	''' GRAPHING '''
-	# x = np.arange(1, NUM_GENERATIONS+1, 1)
-	# y = []	
+	x = np.arange(1, NUM_GENERATIONS+1, 1)
+	y = []	
+	y1 = []
 
-	# for i in range(NUM_GENERATIONS):
-	# 	best_fitness = math.inf
-	# 	for j in range(NUM_ISLANDS):
-	# 		current = BEST_INDICES_GENERATION[i, j].fitness
-	# 		if(current < best_fitness):
-	# 			best_fitness = current
-	# 	y.append(best_fitness)
+	for i in range(NUM_GENERATIONS):
+		best_fitness = math.inf
+		average_fitness = 0
+		for j in range(NUM_ISLANDS):		
+			current = BEST_FITNESS_GENERATION[i, j, 0]
+			average_fitness += BEST_FITNESS_GENERATION[i, j, 1]
+			if(current < best_fitness):
+				best_fitness = current
+		y1.append(average_fitness/NUM_ISLANDS)
+		y.append(best_fitness)
 
-	# plt.plot(x, y)
-	# plt.xlabel("Num generations")
-	# plt.ylabel("Best fitness")
-	# plt.savefig("yeet.png")	
+	plt.plot(x, y, label="Best fitness")
+	plt.plot(x, y1, label="Average fitness")
+	plt.xlabel("Num generations")
+	plt.ylabel("Average/Best fitness")
+	plt.savefig("yeet.png")	
 	
 	
