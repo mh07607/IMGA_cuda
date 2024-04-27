@@ -107,7 +107,7 @@ def binary_tournament_selection(self, isl_ind: ti.i32, res_opt: ti.i32):
 			ISL_POPULATIONS[isl_ind, i] = ISL_SELECTION_RESULTS[isl_ind, i]
 		
 @ti.func
-def fitness_proportional_selection(isl_ind, res_opt):
+def fitness_proportional_selection(self, isl_ind, res_opt):
     if(res_opt == 0):
         population_proportions = ti.Vector([0.0 for _ in range(POPULATION_SIZE)])
         cumulative_fitness = 0.0            
