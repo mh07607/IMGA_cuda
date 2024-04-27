@@ -398,7 +398,7 @@ if __name__ == "__main__":
 	
 	print(device, NUM_ISLANDS, "done")
 
-	# print("Time taken", ending_time)
+	print("Time taken", ending_time)
 
 	''' GRAPHING '''
 	# x = np.arange(1, NUM_GENERATIONS+1, 1)
