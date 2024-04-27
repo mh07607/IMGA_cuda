@@ -1,6 +1,6 @@
 import taichi as ti
 if __name__ == "__main__":
-	ti.init(arch=ti.gpu, default_fp=ti.f64)
+	ti.init(arch=ti.cpu, default_fp=ti.f64)
 	
 from taichi_rng import randint, randint_isl, randfloat_isl # similar to random.randint and random.sample
 from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
@@ -11,7 +11,7 @@ import math
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
-NUM_ISLANDS = 32
+NUM_ISLANDS = 4
 
 # NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
 NUM_OFFSPRINGS = 10
@@ -320,27 +320,27 @@ def i_run_generation(self, isl_ind: ti.i32):
 		
 	self.survivor_selection_function(isl_ind, 1)
 		
-@ti.kernel
-def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: ti.i32, num_generations: ti.i32):
-	# ti.block_local(ISL_POPULATIONS)
-	# ti.loop_config(block_dim=NUM_ISLANDS)
-	for isl_ind in range(num_islands):
-		initial_population_function(isl_ind)
-		best_index = 0
-		for i in range(num_generations):
-			# JAADU
-			if (i + 1)% migration_step == 0:
-				ti.simt.block.sync()
-				if(isl_ind == 0):
-					EA.migration()
-				ti.simt.block.sync()
-			EA.run_generation(isl_ind)
-			# best_index is always 0 so we don't need this function
-			best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
-			best_index = ti.i32(best_index)
+# @ti.kernel
+# def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: ti.i32, num_generations: ti.i32):
+# 	# ti.block_local(ISL_POPULATIONS)
+# 	# ti.loop_config(block_dim=NUM_ISLANDS)
+# 	for isl_ind in range(num_islands):
+# 		initial_population_function(isl_ind)
+# 		best_index = 0
+# 		for i in range(num_generations):
+# 			# JAADU
+# 			if (i + 1)% migration_step == 0:
+# 				ti.simt.block.sync()
+# 				if(isl_ind == 0):
+# 					EA.migration()
+# 				ti.simt.block.sync()
+# 			EA.run_generation(isl_ind)
+# 			# best_index is always 0 so we don't need this function
+# 			best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
+# 			best_index = ti.i32(best_index)
 			
-			BEST_INDICES_GENERATION[i, isl_ind] = ISL_POPULATIONS[isl_ind, best_index]
-		BEST_INDICES[isl_ind] = best_index		
+# 			BEST_INDICES_GENERATION[i, isl_ind] = ISL_POPULATIONS[isl_ind, best_index]
+# 		BEST_INDICES[isl_ind] = best_index		
 
 @ti.kernel
 def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: ti.i32, num_generations: ti.i32):
@@ -386,7 +386,7 @@ if __name__ == "__main__":
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.5)
 	starting_time = time.time()	
-	run_islands(EA, NUM_ISLANDS, 5, 50)
+	run_islands_cpu(EA, NUM_ISLANDS, 5, 50)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
 	ending_time = time.time() - starting_time
