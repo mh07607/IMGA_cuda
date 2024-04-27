@@ -386,7 +386,7 @@ if __name__ == "__main__":
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.9)
 	starting_time = time.time()	
-	migration_step = 25
+	migration_step = 1
 	if(device == "gpu"):
 		run_islands(EA, NUM_ISLANDS, migration_step, NUM_GENERATIONS)
 	else:

@@ -109,11 +109,11 @@ class TSP_EvolutionaryAlgorithm(EvolutionaryAlgorithm):
 		for j in range(num_iterations):
 			for i in tqdm(range(num_generations), desc='Iteration '+str(j+1)):
 				self.run_generation()
-				# if(i % x_offset == 0):
-				best_individual, average_fitness = self.get_average_and_best_individual()
-				# print("\nAverage fitness: ", average_fitness, ", Best value: ", best_individual.fitness)
-				best_fitnesses[j].append(best_individual.fitness)
-				average_fitnesses[j].append(average_fitness)
+				if(i % x_offset == 0):
+					best_individual, average_fitness = self.get_average_and_best_individual()
+					# print("\nAverage fitness: ", average_fitness, ", Best value: ", best_individual.fitness)
+					best_fitnesses[j].append(best_individual.fitness)
+					average_fitnesses[j].append(average_fitness)
 
 			self.population = self.initial_population_function(self.population_size)
 
@@ -148,7 +148,7 @@ selection_pairs = [
 
 num_generations = 2000
 num_iterations = 1
-x_offset = num_generations // 1
+x_offset = num_generations // num_generations
 
 
 for parent_selection, survivor_selection, population_size, mutation_rate, num_offsprings in selection_pairs:
@@ -171,7 +171,7 @@ for parent_selection, survivor_selection, population_size, mutation_rate, num_of
 	y2 = []
 
 	for i in range(len(best_fitnesses)):
-		x.append(i * x_offset)
+		x.append(i)
 		y1.append(np.average(best_fitnesses[i]))
 		y2.append(np.average(average_fitnesses[i]))
 

@@ -1,13 +1,19 @@
 import taichi as ti
-if __name__ == "__main__":
+import sys
+
+device = sys.argv[2]
+if(device == "gpu"):
 	ti.init(arch=ti.gpu, default_fp=ti.f64)
+else:
+    ti.init(arch=ti.cpu, default_fp=ti.f64)
 	
 from taichi_rng import randint, randint_isl, randfloat_isl # similar to random.randint and random.sample
 from taichi_knap import Individual, TYPE_GENOME, knapsack_random_length_crossover
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
-NUM_ISLANDS = 4
+NUM_ISLANDS = int(sys.argv[1])
+NUM_GENERATIONS = 1000
 
 # NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
 NUM_OFFSPRINGS = 10
@@ -19,7 +25,7 @@ ISL_PARENT_SELECTIONS = Individual.field(shape=(NUM_ISLANDS, NUM_OFFSPRINGS))
 ISL_SELECTION_RESULTS = Individual.field(shape=(NUM_ISLANDS, POPULATION_SIZE + NUM_OFFSPRINGS))
 
 BEST_INDICES = ti.field(dtype=ti.i32, shape=(NUM_ISLANDS))
-BEST_INDICES_IN_GENERATIONS = ti.field(dtype=ti.i32, shape=(NUM_ISLANDS, ))
+BEST_FITNESS_GENERATION = ti.field(dtype=ti.f64, shape=(NUM_GENERATIONS, NUM_ISLANDS, 2))
 
 @ti.dataclass
 class EvolutionaryAlgorithm:
@@ -227,50 +233,45 @@ TO-DO
 separately otherwise it may get overwritten by migrated individuals
 '''
 @ti.func
-def hamming_based_migration(self):
+def hamming_based_migration(self, isl_ind: ti.i32):
 	'''
 	  Migration based on lowest 
-	'''
-	for isl_ind in range(NUM_ISLANDS):		
-		# select a random position to replace
-		isl_best_indiv = ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]]
-		least_distance_index = -1
-		least_distance = ti.math.inf
-		for other_ind in range(NUM_ISLANDS):
-			if(other_ind == isl_ind):
-				continue
-			distance_bw_best = isl_best_indiv.hamming_distance(ISL_POPULATIONS[other_ind, BEST_INDICES[other_ind]])
-			if(distance_bw_best < least_distance):
-				least_distance = distance_bw_best
-				least_distance_index = other_ind
-		replace_index = randint_isl(0, POPULATION_SIZE-1, isl_ind)
-		ISL_POPULATIONS[least_distance_index, replace_index] = isl_best_indiv
+	'''	
+	isl_best_indiv = ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]]
+	least_distance_index = -1
+	least_distance = ti.math.inf
+	for other_ind in range(NUM_ISLANDS):
+		if(other_ind == isl_ind):
+			continue
+		distance_bw_best = isl_best_indiv.hamming_distance(ISL_POPULATIONS[other_ind, BEST_INDICES[other_ind]])
+		if(distance_bw_best < least_distance):
+			least_distance = distance_bw_best
+			least_distance_index = other_ind
+	replace_index = randint_isl(0, POPULATION_SIZE-1, isl_ind)
+	ISL_POPULATIONS[least_distance_index, replace_index] = isl_best_indiv
 
 
 @ti.func
-def LCS_based_migration(self):
-	for isl_ind in range(NUM_ISLANDS):		
-		# select a random position to replace
-		isl_best_indiv = ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]]
-		best_similarity_index = -1
-		best_similarity = 0
-		for other_ind in range(NUM_ISLANDS):
-			if(other_ind == isl_ind):
-				continue
-			similarity_bw_best = isl_best_indiv.LCS(ISL_POPULATIONS[other_ind, BEST_INDICES[other_ind]])
-			if(similarity_bw_best > best_similarity):
-				best_similarity = similarity_bw_best
-				best_similarity_index = other_ind
-		replace_index = randint_isl(0, POPULATION_SIZE-1, isl_ind)
-		ISL_POPULATIONS[best_similarity_index, replace_index] = isl_best_indiv
+def LCS_based_migration(self, isl_ind: ti.i32):				
+	isl_best_indiv = ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]]
+	best_similarity_index = -1
+	best_similarity = 0
+	for other_ind in range(NUM_ISLANDS):
+		if(other_ind == isl_ind):
+			continue
+		similarity_bw_best = isl_best_indiv.LCS(ISL_POPULATIONS[other_ind, BEST_INDICES[other_ind]])
+		if(similarity_bw_best > best_similarity):
+			best_similarity = similarity_bw_best
+			best_similarity_index = other_ind
+	replace_index = randint_isl(0, POPULATION_SIZE-1, isl_ind)
+	ISL_POPULATIONS[best_similarity_index, replace_index] = isl_best_indiv
 
 @ti.func
-def ring_migration(self):
-	for isl_ind in range(NUM_ISLANDS):
-		next_island = (isl_ind + 1) % NUM_ISLANDS
-		# select a random position to replace
-		replace_index = randint_isl(0, POPULATION_SIZE-1, isl_ind)
-		ISL_POPULATIONS[next_island, replace_index] = ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]]
+def ring_migration(self, isl_ind: ti.i32):	
+	next_island = (isl_ind + 1) % NUM_ISLANDS
+	# select a random position to replace
+	replace_index = randint_isl(0, POPULATION_SIZE-1, isl_ind)
+	ISL_POPULATIONS[next_island, replace_index] = ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]]
 
 		
 @ti.func
@@ -318,23 +319,24 @@ def i_run_generation(self, isl_ind: ti.i32):
 		
 @ti.kernel
 def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: ti.i32, num_generations: ti.i32):
-	ti.block_local(ISL_POPULATIONS)
+	# ti.block_local(ISL_POPULATIONS)
+	# ti.loop_config(block_dim=NUM_ISLANDS)
 	for isl_ind in range(num_islands):
 		initial_population_function(isl_ind)
 		best_index = 0
-		for i in range(num_generations):
-			# JAADU
+		for i in range(num_generations):			
 			if (i + 1)% migration_step == 0:
-				ti.simt.block.sync()
-				if(isl_ind == 0):
-					EA.migration()
-				ti.simt.block.sync()
+				ti.simt.block.sync()				
+				EA.migration(isl_ind)				
 			EA.run_generation(isl_ind)
 			# best_index is always 0 so we don't need this function
 			best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
 			best_index = ti.i32(best_index)
 			
-		BEST_INDICES[isl_ind] = best_index
+			BEST_FITNESS_GENERATION[i, isl_ind, 0] = ISL_POPULATIONS[isl_ind, best_index].fitness
+			BEST_FITNESS_GENERATION[i, isl_ind, 1] = avg_fitness
+
+		BEST_INDICES[isl_ind] = best_index		
 
 @ti.kernel
 def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: ti.i32, num_generations: ti.i32):
@@ -344,13 +346,13 @@ def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_st
 		for i in range(num_generations):
 			# JAADU
 			if (i + 1) % migration_step == 0:                
-				EA.migration()
+				EA.migration(isl_ind)
 			EA.run_generation(isl_ind)
 			# best_index is always 0 so we don't need this function
 			best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
 			best_index = ti.i32(best_index)
 			
-		BEST_INDICES[isl_ind] = best_index
+		BEST_INDICES[isl_ind] = best_index	
 
 	
 	
@@ -369,6 +371,7 @@ def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_st
 #         print(POPULATION[x].fitness, end=', ')
 		
 
+# BUG: REMEMBER YOU HAVE TO FIX FITNESS COMPUTATION FOR THIS AS IT IS OPPOSITE TO TSP
 
 if __name__ == "__main__":
 	EvolutionaryAlgorithm.methods = {
@@ -379,6 +382,6 @@ if __name__ == "__main__":
 		"migration": ring_migration
 	}	
 	EA = EvolutionaryAlgorithm(mutation_rate=0.5)	
-	run_islands(EA, NUM_ISLANDS, 500, 100)
+	run_islands(EA, NUM_ISLANDS, 1, NUM_GENERATIONS)
 	for isl_ind in range(NUM_ISLANDS):
-		print(1/ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
+		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)

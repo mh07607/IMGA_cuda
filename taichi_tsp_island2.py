@@ -397,9 +397,9 @@ if __name__ == "__main__":
 	with open("time.txt", "a") as file:
 		file.write(device + " " + str(NUM_ISLANDS) + " " + str(ending_time) + "\n")
 	
-	# print(device, NUM_ISLANDS, "done")
+	print(device, NUM_ISLANDS, "done")
 
-	print("Time taken", ending_time)
+	# print("Time taken", ending_time)
 
 	''' GRAPHING '''
 	# x = np.arange(1, NUM_GENERATIONS+1, 1)
