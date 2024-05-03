@@ -195,7 +195,7 @@ class Island:
 
 
     
-    def run_generation(self, parent_selection, survivor_selection, population, offspring, island_num):  
+    def run_generation(self, parent_selection, survivor_selection, population, offspring, max_generations, island_num):  
         flag = 1
 
         #create new population with a reduced chromosome according to current maxNumColours
@@ -203,13 +203,10 @@ class Island:
         self.bestFitness = self.calc_fitness(self.island[0]) 
         self.fittest = self.island[0]
 
-
-
-
         print(f'Trying to color island {island_num + 1} with {self.maxNumColors} colors')
-        tries = 0
-        while self.bestFitness != 0 and tries < 100:
-            tries += 1
+        current_generation = 0
+        while self.bestFitness != 0 and current_generation < max_generations:
+            current_generation += 1
             # Parent Selection
             parents = []
             if parent_selection == 1:
@@ -251,12 +248,12 @@ class Island:
                     self.bestFitness = temp
                     self.fittest = individual
             
-
             if self.bestFitness == 0:
                     break
             
-        if tries >= 100:
-            print("Tries Exhausted!")
+        if current_generation >= max_generations:
+            print("Generations Exhausted!")
+
         if self.bestFitness == 0:
             print(f'{self.maxNumColors} colors succeeded! Trying {self.maxNumColors - 1} colors')
             self.maxNumColors -= 1
@@ -265,9 +262,9 @@ class Island:
             if self.checkCount != 2 and self.maxNumColors > 1:
                 failedColors = self.maxNumColors
                 if self.checkCount == 0:
-                    print(f'{self.maxNumColors} failed. For safety, checking for improvement with {self.maxNumColors} colors again')
+                    print(f'{self.maxNumColors} failed. For safety, checking for improvement with {self.maxNumColors} colors again in next iteration')
                 if self.checkCount == 1:
-                    print(f'{self.maxNumColors} failed. For safety, checking for improvement with {self.maxNumColors - 1} colors')
+                    print(f'{self.maxNumColors} failed. For safety, checking for improvement with {self.maxNumColors - 1} colors again in next iteration')
                     self.maxNumColors -= 1
                 self.checkCount += 1
 
@@ -285,9 +282,10 @@ class Island:
 
 class IslandModels:
 
-    def __init__(self, num_islands, population_size_per_island, num_generations, migration_interval, migration_rate, mutation_rate, tournament_size, migration_stratergy, graph, survivor_method, parent_method):
+    def __init__(self, num_islands, population_size_per_island, num_generations, migration_interval, migration_rate, mutation_rate, tournament_size, migration_stratergy, graph, survivor_method, parent_method, iterations):
         self.num_islands = num_islands  
         self.population_size_per_island = population_size_per_island 
+        self.num_iterations = iterations
         self.num_generations = num_generations 
         self.migration_interval = migration_interval  # informing the number of genererations after migrations occurs
         self.migration_rate = migration_rate # number of individuals transfered during each migration
@@ -349,24 +347,25 @@ class IslandModels:
         
         checker = np.ones(len(self.islands))
         island_best_solutions = [1000] * (len(self.islands) + 1)
-        for generation in range(self.num_generations):
+
+        for iteration in range(self.num_iterations):
             # Evolve each island
             for island_index, island in enumerate(self.islands):
                 # Assuming the arguments are in order: parent selection method, survivor selection method, population size, offspring size
                 if checker[island_index] == 1:
-                    temp = island.run_generation(self.parent_method, self.survivor_method, self.population_size_per_island, self.tournament_size, island_num=island_index)
+                    temp = island.run_generation(self.parent_method, self.survivor_method, self.population_size_per_island, self.tournament_size, self.num_generations, island_num=island_index )
                     checker[island_index] = temp
                 best_fitness = island.maxNumColors
 
                 if best_fitness < island_best_solutions[island_index + 1]:
                     island_best_solutions[island_index + 1] = best_fitness
-                print(f"Best fitness for Island {island_index + 1} in generation {generation + 1}: {best_fitness}")
+                print(f"Best fitness for Island {island_index + 1} in iteration {iteration + 1}: {best_fitness}")
             
             # Perform migration at the specified interval
             
-            if (generation + 1) % self.migration_interval == 0:
+            if (iteration + 1) % self.migration_interval == 0:
                 self.migrate()
-                print(f"Migration occurred at generation {generation + 1}.")
+                print(f"Migration occurred at generation {iteration + 1}.")
         
         print(f"Best overall fitness is:{min(island_best_solutions)}")
 
@@ -375,7 +374,8 @@ class IslandModels:
 # Set parameters
 num_islands = 3
 population_size_per_island = 10
-num_generations = 200
+num_iterations = 200
+num_generations = 500
 migration_rate = 0.5
 mutation_rate = 0.2
 tournament_size = 10
@@ -394,7 +394,7 @@ if __name__ == '__main__':
     ####HERE, WHAT EXACTLY IS TOURNAMENT SIZE####  
     survivor_method = 4
     parent_method = 2
-    model = IslandModels(num_islands, population_size_per_island, num_generations, migration_interval, migration_rate, mutation_rate, tournament_size, migration_stratergy, graph, survivor_method, parent_method)
+    model = IslandModels(num_islands, population_size_per_island, num_iterations, migration_interval, migration_rate, mutation_rate, tournament_size, migration_stratergy, graph, survivor_method, parent_method, num_iterations)
     model.evolve()
     
 #refrence: https://github.com/soumildatta/GeneticGraphColoring/blob/main/geneticColoring.py
