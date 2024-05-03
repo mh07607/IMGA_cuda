@@ -422,6 +422,6 @@ if __name__ == "__main__":
 	plt.plot(x, y1, label="Average fitness")
 	plt.xlabel("Num generations")
 	plt.ylabel("Average/Best fitness")
-	plt.savefig("yeet.png")	
+	plt.savefig(str(device)+str(NUM_ISLANDS)+".png")	
 	
 	
