@@ -1,3 +1,4 @@
+import sys
 import taichi as ti
 	
 device = sys.argv[2]
@@ -6,7 +7,6 @@ if(device == "gpu"):
 else:
     ti.init(arch=ti.cpu, default_fp=ti.f64)
 	
-import sys
 import time
 from taichi_rng import randint, randint_isl, randfloat_isl # similar to random.randint and random.sample
 from taichi_tsp import Individual, TSP_random_length_crossover
