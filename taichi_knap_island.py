@@ -1,5 +1,9 @@
 import taichi as ti
 import sys
+import time
+import numpy as np
+import math
+import matplotlib.pyplot as plt
 
 device = sys.argv[2]
 if(device == "gpu"):
@@ -57,7 +61,7 @@ def truncation_selection(self, isl_ind: ti.i32, res_opt: ti.i32):
 		# Sort the array based on fitness values
 		for i in range(POPULATION_SIZE):
 			for j in range(i + 1, POPULATION_SIZE):
-				if fitnesses[i] > fitnesses[j]:
+				if fitnesses[i] < fitnesses[j]:
 					fitnesses[i], fitnesses[j] = fitnesses[j], fitnesses[i]
 					indices[i], indices[j] = indices[j], indices[i]
 		
@@ -73,7 +77,7 @@ def truncation_selection(self, isl_ind: ti.i32, res_opt: ti.i32):
 		# Sort the array based on fitness values, nothing else is required
 		for i in range(POPULATION_SIZE + NUM_OFFSPRINGS):
 			for j in range(i + 1, POPULATION_SIZE + NUM_OFFSPRINGS):
-				if ISL_POPULATIONS[isl_ind, i].fitness > ISL_POPULATIONS[isl_ind, j].fitness:
+				if ISL_POPULATIONS[isl_ind, i].fitness < ISL_POPULATIONS[isl_ind, j].fitness:
 					ISL_POPULATIONS[isl_ind, i], ISL_POPULATIONS[isl_ind, j] = ISL_POPULATIONS[isl_ind, j], ISL_POPULATIONS[isl_ind, i]                
 
 		# for i in range(num_selections):
@@ -352,6 +356,8 @@ def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_st
 			best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
 			best_index = ti.i32(best_index)
 			
+			BEST_FITNESS_GENERATION[i, isl_ind, 0] = ISL_POPULATIONS[isl_ind, best_index].fitness
+			BEST_FITNESS_GENERATION[i, isl_ind, 1] = avg_fitness
 		BEST_INDICES[isl_ind] = best_index	
 
 	
@@ -381,7 +387,36 @@ if __name__ == "__main__":
 		'run_generation': i_run_generation,
 		"migration": ring_migration
 	}	
-	EA = EvolutionaryAlgorithm(mutation_rate=0.5)	
-	run_islands(EA, NUM_ISLANDS, 1, NUM_GENERATIONS)
+	EA = EvolutionaryAlgorithm(mutation_rate=0.9)
+	starting_time = time.time()	
+	migration_step = 1
+	if(device == "gpu"):
+		run_islands(EA, NUM_ISLANDS, migration_step, NUM_GENERATIONS)
+	else:
+		run_islands_cpu(EA, NUM_ISLANDS, migration_step, NUM_GENERATIONS)
 	for isl_ind in range(NUM_ISLANDS):
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
+	ending_time = time.time() - starting_time
+	
+	x = np.arange(1, NUM_GENERATIONS+1, 1)
+	y = []	
+	y1 = []
+
+	for i in range(NUM_GENERATIONS):
+		best_fitness = 0
+		average_fitness = 0
+		for j in range(NUM_ISLANDS):		
+			current = BEST_FITNESS_GENERATION[i, j, 0]
+			average_fitness += BEST_FITNESS_GENERATION[i, j, 1]
+			if(current > best_fitness):
+				best_fitness = current
+		y1.append(average_fitness/NUM_ISLANDS)
+		y.append(best_fitness)
+
+	print(y)
+	print(y1)
+	plt.plot(x, y, label="Best fitness")
+	plt.plot(x, y1, label="Average fitness")
+	plt.xlabel("Num generations")
+	plt.ylabel("Average/Best fitness")
+	plt.savefig("yeet.png")	

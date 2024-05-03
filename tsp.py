@@ -146,7 +146,7 @@ selection_pairs = [
                     # ('rank', 'binary', 100, 0.5, 100),
                   ]
 
-num_generations = 2000
+num_generations = 250
 num_iterations = 1
 x_offset = num_generations // num_generations
 

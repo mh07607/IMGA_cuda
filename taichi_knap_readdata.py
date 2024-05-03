@@ -56,8 +56,8 @@ def calculate_weight(genome):
 def calculate_fitness(genome):
     value = calculate_value(genome)
     weight = calculate_weight(genome)
-    fitness = ti.f64(ti.math.inf)
+    fitness = 0
     if weight < KNAPSACK_WEIGHT:
-        fitness = 1/value
+        fitness = value
     return fitness
         
