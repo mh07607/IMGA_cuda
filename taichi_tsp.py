@@ -84,14 +84,6 @@ class Individual:
 		return LCS_Buffer[NUM_CITIES, NUM_CITIES]	
 
 
-@ti.func 
-def IN(iterable, length, element) -> ti.i32:
-	ret = 0
-	for i in range(length):
-		if iterable[i] == element:
-			ret = 1
-	return ret
-
 @ti.func
 def TSP_random_length_crossover(self, parent1, parent2, isl_ind:int):
 	start = randint_isl(0, NUM_CITIES-2, isl_ind)

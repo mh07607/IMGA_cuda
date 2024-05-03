@@ -1,5 +1,4 @@
 import taichi as ti
-import sys
 	
 device = sys.argv[2]
 if(device == "gpu"):
@@ -7,12 +6,10 @@ if(device == "gpu"):
 else:
     ti.init(arch=ti.cpu, default_fp=ti.f64)
 	
-from taichi_rng import randint, randint_isl, randfloat_isl # similar to random.randint and random.sample
-from taichi_tsp import Individual, TYPE_GENOME, TSP_random_length_crossover
-import numpy as np
-import matplotlib.pyplot as plt
+import sys
 import time
-import math
+from taichi_rng import randint, randint_isl, randfloat_isl # similar to random.randint and random.sample
+from taichi_tsp import Individual, TSP_random_length_crossover
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
@@ -164,10 +161,6 @@ def random_selection(self, isl_ind: ti.i32, res_opt: ti.i32):
 
 			for i in range(POPULATION_SIZE):
 				ISL_POPULATIONS[isl_ind, i] = ISL_SELECTION_RESULTS[isl_ind, i]
-		
-@ti.func
-def rank_selection(self, isl_ind: ti.i32, res_opt: ti.i32):    
-	pass
 
 
 
@@ -205,31 +198,6 @@ def initial_population_function(isl_ind: ti.i32):
 Migration strategies will go here
 - Ring migration, Hamming distance similarity, LCS
 '''
-
-# # LCS adapted from GeeksforGeeks
-# @ti.func
-# def LCS(X, Y): 
-# 	# find the length of the strings 
-# 	m = len(X) 
-# 	n = len(Y) 
- 
-# 	# declaring the array for storing the dp values 
-# 	L = [[None]*(n + 1) for i in range(m + 1)] 
- 
-# 	"""Following steps build L[m + 1][n + 1] in bottom up fashion 
-# 	Note: L[i][j] contains length of LCS of X[0..i-1] 
-# 	and Y[0..j-1]"""
-# 	for i in range(m + 1): 
-# 		for j in range(n + 1): 
-# 			if i == 0 or j == 0 : 
-# 				L[i][j] = 0
-# 			elif X[i-1] == Y[j-1]: 
-# 				L[i][j] = L[i-1][j-1]+1
-# 			else: 
-# 				L[i][j] = max(L[i-1][j], L[i][j-1]) 
- 
-# 	# L[m][n] contains the length of LCS of X[0..n-1] & Y[0..m-1] 
-# 	return L[m][n] 
 
 '''
 TO-DO
