@@ -79,7 +79,7 @@ class Island:
         result = []
         result = copy.deepcopy(self.island)
         result = sorted(result, key=lambda k: self.calc_fitness(k))
-        return result[:size]
+        return result[0:size] 
 
     def random_selection(self, size):
         result = []
@@ -255,29 +255,30 @@ class Island:
             print("Generations Exhausted!")
 
         if self.bestFitness == 0:
-            print(f'{self.maxNumColors} colors succeeded! Trying {self.maxNumColors - 1} colors')
+            print(f'{self.maxNumColors} colors succeeded! Trying {self.maxNumColors - 1} colors in next iteration')
             self.maxNumColors -= 1
             self.checkCount = 0
         else:
-            if self.checkCount != 2 and self.maxNumColors > 1:
+            if self.checkCount < 10 and self.maxNumColors > 1:
                 failedColors = self.maxNumColors
-                if self.checkCount == 0:
+                if self.checkCount >= 0 and self.checkCount < 5:
                     print(f'{self.maxNumColors} failed. For safety, checking for improvement with {self.maxNumColors} colors again in next iteration')
-                if self.checkCount == 1:
+                if self.checkCount >= 5:
                     print(f'{self.maxNumColors} failed. For safety, checking for improvement with {self.maxNumColors - 1} colors again in next iteration')
                     self.maxNumColors -= 1
                 self.checkCount += 1
 
-            if self.maxNumColors > 1 and self.checkCount == 2:
+            if self.maxNumColors > 1 and self.checkCount >= 10:
                 print(f'Graph is {failedColors + 1} colorable')
-            elif self.maxNumColors <= 1 and self.checkCount == 2:
+                flag = 0
+            elif self.maxNumColors <= 1 and self.checkCount >= 10:
                 print(f'Graph is {self.maxNumColors + 1} colorable')
+                flag = 0
 
-            flag = 0
+            
 
         return flag
             
-    
 
 
 class IslandModels:
@@ -294,7 +295,6 @@ class IslandModels:
         self.survivor_method = survivor_method
         self.parent_method = parent_method
         self.graph = graph
-
         self.islands = [Island( graph, population_size_per_island, mutation_rate) for _ in range(num_islands)]
         self.migration_stratergy = migration_stratergy
 
@@ -372,11 +372,11 @@ class IslandModels:
     
         
 # Set parameters
-num_islands = 3
+num_islands = 4
 population_size_per_island = 10
 num_iterations = 200
 num_generations = 500
-migration_rate = 0.5
+migration_rate = 0.3 #determines number of migrants between islands
 mutation_rate = 0.2
 tournament_size = 10
 
@@ -384,9 +384,9 @@ migration_stratergy = 1 #3 doesn't exist yet
 migration_interval = None
 
 if migration_stratergy == 1:
-    migration_interval = 10
+    migration_interval = 5
 if migration_stratergy == 2 or migration_stratergy == 3:
-    migration_interval = 25
+    migration_interval = 10
 
 if __name__ == '__main__':
     file_path = '/Users/asadullahchaudhry/Github HU/IMGA_cuda/island_model_nonGPU/queen11_11.col'  
@@ -396,5 +396,8 @@ if __name__ == '__main__':
     parent_method = 2
     model = IslandModels(num_islands, population_size_per_island, num_iterations, migration_interval, migration_rate, mutation_rate, tournament_size, migration_stratergy, graph, survivor_method, parent_method, num_iterations)
     model.evolve()
-    
-#refrence: https://github.com/soumildatta/GeneticGraphColoring/blob/main/geneticColoring.py
+
+
+
+
+#Refrence: https://github.com/soumildatta/GeneticGraphColoring/blob/main/geneticColoring.py
