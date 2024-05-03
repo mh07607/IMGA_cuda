@@ -1,0 +1,31 @@
+def knapsack_random_length_crossover(self, parent1, parent2):
+	start = randint(1, NUM_CITIES-2)
+	end = randint(start, NUM_CITIES-1)
+
+	offspring1_genome = [-1 for _ in range(NUM_CITIES)]
+	offspring2_genome = [-1 for _ in range(NUM_CITIES)]
+
+	for i in range(start, end+1):
+		offspring1_genome[i] = parent1.genome[i]
+		offspring2_genome[i] = parent2.genome[i]
+
+	parent1_pointer = (end + 1) % NUM_CITIES
+	parent2_pointer = (end + 1) % NUM_CITIES
+	# There's a more efficient way to do this I'm sure
+	pointer = (end + 1) % NUM_CITIES
+	count = end-start+1
+	while count < NUM_CITIES:		
+        offspring1_genome[pointer % NUM_CITIES] = parent2.genome[parent2_pointer]
+        count += 1
+        pointer += 1
+		parent2_pointer = (parent2_pointer + 1) % NUM_CITIES
+
+	pointer = (end + 1) % NUM_CITIES
+	count = end-start+1
+	while count < NUM_CITIES:						
+        offspring2_genome[pointer % NUM_CITIES] = parent1.genome[parent1_pointer]
+        count += 1
+        pointer += 1
+		parent1_pointer = (parent1_pointer + 1) % NUM_CITIES  
+	
+	return offspring1_genome, offspring2_genome
