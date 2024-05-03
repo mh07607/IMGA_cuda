@@ -26,6 +26,8 @@ def read_graph_from_file(file_path):
             graph[v2 - 1][v1 - 1] = 1
 
         return graph
+    
+
 def printGraph(graph):
     print([row for row in graph])
 
@@ -37,8 +39,17 @@ class Island:
         self.population_size = population_size
         self.mutation_rate = mutation_rate
         self.n = len(graph)
-        self.max_colors = self.get_max_colors()
+        self.maxNumColors = self.get_max_colors()
         self.island = self.initialize_island()  #represents population, an array of chromosomes, where each chromosome is as defined in create_chromosome
+        self.bestFitness = self.calc_fitness(self.island[0]) 
+        self.fittest = self.island[0]
+        self.checkCount = 0
+        self.failedColors = 0
+
+        
+        
+
+        
 
 
     def initialize_island(self):
@@ -46,7 +57,7 @@ class Island:
 
     def create_chromosome(self):
         ## Each solution is represented in a 1D array where the index of each item in that array maps to the index of a vertex in the graph
-        return np.random.randint(1, self.max_colors + 1, size=self.n) 
+        return np.random.randint(1, self.maxNumColors + 1, size=self.n) 
 
     def get_max_colors(self): 
         max_num_colors = 0
@@ -77,14 +88,18 @@ class Island:
             result.append(self.island[rand_num])
         return result
     
-    def binary_tournament_selection(self, size):
-        result= []
+    def tournament_selection(self, size):
+        selections = []
+        participants = []
         for i in range(size):
-            #get two random individuals from numpy array
-            ind1, ind2 = random.choice(self.island), random.choice(self.island)
-            selected = ind1 if self.calc_fitness(ind1) < self.calc_fitness(ind2) else ind2
-            result.append(selected)
-        return result
+            ele = random.choice(self.island)
+            
+            participants.append(ele)
+        for _ in range(2):
+            winner = min(participants, key=lambda chromosome: self.calc_fitness(chromosome))
+            selections.append(winner)
+        return selections
+        
 
     
     def fitness_proportional_selection(self,size):
@@ -106,20 +121,67 @@ class Island:
     def best_fitness(self):
         temp = []
         for i in self.island:
-
             temp.append(self.calc_fitness(i))
 
         return min(temp)
 
-    def crossover(self, parent1, parent2, mutation_rate): #one point crossover
+    def crossover(self, parent1, parent2): #one point crossover
         split_point = random.randint(2, self.n - 2)
         child1 = np.concatenate((parent1[:split_point], parent2[split_point:]))
         child2 = np.concatenate((parent2[:split_point], parent1[split_point:]))
-
-        child1 = self.mutation(child1, mutation_rate)
-        child2 = self.mutation(child1, mutation_rate)
         return child1, child2
     
+    # def crossover(self, chrom1, chrom2, mut_rate):
+    #     # scheme to be implemented using crossover scheme where a randomly selected set of parent 1 would displace the randomly selected set of parent 2
+    #     #start should be between 25th and 50th percentile of len of chromomosome
+    #     #end should be between 75th and 100th percentile of len of chromomosome
+
+    #     len_chromosome = self.n
+    #     start = random.randint(len_chromosome * 20 // 100, len_chromosome * 40 // 100) 
+    #     end = random.randint(len_chromosome * 60 // 100, len_chromosome * 80 // 100)
+
+    #     # start = random.randint(1, len_chromosome // 2)
+    #     # end = random.randint(len_chromosome // 2 + 1, len_chromosome - 2)
+
+    #     parent1 = chrom1
+    #     parent2 = chrom2
+
+    #     offspring1 = [None] * len_chromosome
+    #     offspring2 = [None] * len_chromosome
+
+    #     offspring1[start:end+1] = parent1[start:end+1]
+    #     offspring2[start:end+1] = parent2[start:end+1]
+    #     pointer = end + 1
+    #     parent1_pointer = end + 1
+    #     parent2_pointer = end + 1
+    #     while pointer != start:
+
+    #         if parent2[parent2_pointer] not in offspring1:    
+    #             offspring1[pointer] = parent2[parent2_pointer]
+    #             pointer += 1
+    #         parent2_pointer += 1
+    #         if parent2_pointer == len(offspring1):
+    #             parent2_pointer = 0
+    #         if pointer == len(offspring1):
+    #             pointer = 0
+    #     pointer = end + 1
+
+    #     while pointer != start:
+
+    #         if parent1[parent1_pointer] not in offspring2: 
+    #             offspring2[pointer] = parent1[parent1_pointer]
+    #             pointer += 1
+    #         parent1_pointer += 1
+    #         if parent1_pointer == len(offspring2):
+    #             parent1_pointer = 0
+    #         if pointer == len(offspring2):
+    #             pointer = 0
+
+        
+    #     offspring1 = self.mutation(offspring1, mutation_rate)
+    #     offspring2 = self.mutation(offspring2, mutation_rate)
+
+    #     return [offspring1, offspring2] 
 
     def mutation(self, chromosome, chance):
         possible = random.uniform(0, 1)
@@ -127,45 +189,98 @@ class Island:
             for vertex1 in range(self.n):
                 for vertex2 in range(vertex1, self.n):
                     if self.graph[vertex1][vertex2] == 1 and chromosome[vertex1] == chromosome[vertex2]:
-                        chromosome[vertex1] = random.randint(1, self.max_colors)
+                        chromosome[vertex1] = random.randint(1, self.maxNumColors)
         return chromosome
     
 
+
     
-    def run_generation(self, parent_selection, survivor_selection, population, offspring):
-        parents = []
-        
-        if parent_selection == 1:
-            parents = self.random_selection(offspring)
-        elif parent_selection == 2:
-            parents = self.binary_tournament_selection(offspring)
-        elif parent_selection == 3:
-            parents = self.fitness_proportional_selection(offspring)
-        elif parent_selection == 4:
-            parents = self.rank_selection(offspring)
-        elif parent_selection == 5:
-            parents = self.truncation_selection(offspring)
-        
-        for j in range(0,offspring,2):
-            ind1, ind2 = random.choice(self.island), random.choice(self.island)
+    def run_generation(self, parent_selection, survivor_selection, population, offspring, island_num):  
+        flag = 1
 
-            temp = self.crossover(ind1, ind2, self.mutation_rate)
-            np.concatenate((self.island, temp))
-           
-        if survivor_selection == 1:
-            self.island = self.random_selection(population)
-        elif survivor_selection == 2:
-            self.island = self.binary_tournament_selection(population)
-        elif survivor_selection == 3:
-            self.island = self.fitness_proportional_selection(population)
-        elif survivor_selection == 4:
-            self.island = self.rank_selection(population)
-        elif survivor_selection == 5:
-            self.island = self.truncation_selection(population)
+        #create new population with a reduced chromosome according to current maxNumColours
+        self.island = self.initialize_island()
+        self.bestFitness = self.calc_fitness(self.island[0]) 
+        self.fittest = self.island[0]
 
-        print("the total populatin size is ", len(self.island))
 
-            # print("the best fit for the ", i, " generation is: ", self.best_fitness())
+
+
+        print(f'Trying to color island {island_num + 1} with {self.maxNumColors} colors')
+        tries = 0
+        while self.bestFitness != 0 and tries < 100:
+            tries += 1
+            # Parent Selection
+            parents = []
+            if parent_selection == 1:
+                parents = self.random_selection(offspring)
+            elif parent_selection == 2:
+                parents = self.tournament_selection(offspring) #here offspring is the tournament size
+            elif parent_selection == 3:
+                parents = self.fitness_proportional_selection(offspring)
+            elif parent_selection == 4:
+                parents = self.rank_selection(offspring)
+            elif parent_selection == 5:
+                parents = self.truncation_selection(offspring)
+
+            #Crossover
+            child1, child2 =  self.crossover(parents[0], parents[1])
+            
+            #Mutation
+            child1 = self.mutation(child1, self.mutation_rate)
+            child2 = self.mutation(child2, self.mutation_rate)
+
+            #Add children to the population
+            self.island = np.append(self.island, [child1], axis=0)
+            self.island = np.append(self.island, [child2], axis=0)
+
+            # Survivor Selection
+            if survivor_selection == 1:
+                self.island = self.random_selection(population)
+            elif survivor_selection == 2:
+                self.island = self.fitness_proportional_selection(population)
+            elif survivor_selection == 3:
+                self.island = self.rank_selection(population)
+            elif survivor_selection == 4:
+                self.island = self.truncation_selection(population)
+
+            
+            for individual in self.island:
+                temp = self.calc_fitness(individual)
+                if(temp < self.bestFitness):
+                    self.bestFitness = temp
+                    self.fittest = individual
+            
+
+            if self.bestFitness == 0:
+                    break
+            
+        if tries >= 100:
+            print("Tries Exhausted!")
+        if self.bestFitness == 0:
+            print(f'{self.maxNumColors} colors succeeded! Trying {self.maxNumColors - 1} colors')
+            self.maxNumColors -= 1
+            self.checkCount = 0
+        else:
+            if self.checkCount != 2 and self.maxNumColors > 1:
+                failedColors = self.maxNumColors
+                if self.checkCount == 0:
+                    print(f'{self.maxNumColors} failed. For safety, checking for improvement with {self.maxNumColors} colors again')
+                if self.checkCount == 1:
+                    print(f'{self.maxNumColors} failed. For safety, checking for improvement with {self.maxNumColors - 1} colors')
+                    self.maxNumColors -= 1
+                self.checkCount += 1
+
+            if self.maxNumColors > 1 and self.checkCount == 2:
+                print(f'Graph is {failedColors + 1} colorable')
+            elif self.maxNumColors <= 1 and self.checkCount == 2:
+                print(f'Graph is {self.maxNumColors + 1} colorable')
+
+            flag = 0
+
+        return flag
+            
+    
 
 
 class IslandModels:
@@ -180,6 +295,7 @@ class IslandModels:
         self.tournament_size = tournament_size
         self.survivor_method = survivor_method
         self.parent_method = parent_method
+        self.graph = graph
 
         self.islands = [Island( graph, population_size_per_island, mutation_rate) for _ in range(num_islands)]
         self.migration_stratergy = migration_stratergy
@@ -201,8 +317,6 @@ class IslandModels:
 
         return lcs_matrix[m][n]
 
-
-
     def migrate(self, stratergy:int = 1):
         '''Migrate individuals between islands based on the specified migration strategy.'''
         '''stratergy: int, migration strategy to use. 1 for ring based migration, 2 for best individual migration, 3 for gene based similarity migration. Default is 1.'''
@@ -222,7 +336,7 @@ class IslandModels:
 
             for i in range(self.num_islands):
             # Find the best individual in the island
-                best_individual = min(self.islands[i].island, key=lambda chromosome: self.islands[i].calc_fitness(chromosome))
+                best_individual =  min(self.islands[i].island, key=lambda chromosome: self.islands[i].calc_fitness(chromosome))
                 
                 # Migrate the best individual to the next island
                 target_island = (i + 1) % self.num_islands
@@ -232,12 +346,20 @@ class IslandModels:
                 self.islands[target_island].island = self.islands[target_island].truncation_selection(self.population_size_per_island)
 
     def evolve(self):
+        
+        checker = np.ones(len(self.islands))
+        island_best_solutions = [1000] * (len(self.islands) + 1)
         for generation in range(self.num_generations):
             # Evolve each island
             for island_index, island in enumerate(self.islands):
                 # Assuming the arguments are in order: parent selection method, survivor selection method, population size, offspring size
-                island.run_generation(self.parent_method, self.survivor_method, self.population_size_per_island, self.tournament_size)
-                best_fitness = island.best_fitness()
+                if checker[island_index] == 1:
+                    temp = island.run_generation(self.parent_method, self.survivor_method, self.population_size_per_island, self.tournament_size, island_num=island_index)
+                    checker[island_index] = temp
+                best_fitness = island.maxNumColors
+
+                if best_fitness < island_best_solutions[island_index + 1]:
+                    island_best_solutions[island_index + 1] = best_fitness
                 print(f"Best fitness for Island {island_index + 1} in generation {generation + 1}: {best_fitness}")
             
             # Perform migration at the specified interval
@@ -245,14 +367,16 @@ class IslandModels:
             if (generation + 1) % self.migration_interval == 0:
                 self.migrate()
                 print(f"Migration occurred at generation {generation + 1}.")
+        
+        print(f"Best overall fitness is:{min(island_best_solutions)}")
 
     
         
 # Set parameters
-num_islands = 5
-population_size_per_island = 30
-num_generations = 1000
-migration_rate = 0.3
+num_islands = 3
+population_size_per_island = 10
+num_generations = 200
+migration_rate = 0.5
 mutation_rate = 0.2
 tournament_size = 10
 
@@ -268,9 +392,9 @@ if __name__ == '__main__':
     file_path = '/Users/asadullahchaudhry/Github HU/IMGA_cuda/island_model_nonGPU/queen11_11.col'  
     graph = read_graph_from_file(file_path)
     ####HERE, WHAT EXACTLY IS TOURNAMENT SIZE####  
-    survivor_method = 5
+    survivor_method = 4
     parent_method = 2
     model = IslandModels(num_islands, population_size_per_island, num_generations, migration_interval, migration_rate, mutation_rate, tournament_size, migration_stratergy, graph, survivor_method, parent_method)
     model.evolve()
     
-refrence: https://github.com/soumildatta/GeneticGraphColoring/blob/main/geneticColoring.py
+#refrence: https://github.com/soumildatta/GeneticGraphColoring/blob/main/geneticColoring.py

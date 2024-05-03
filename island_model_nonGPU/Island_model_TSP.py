@@ -79,7 +79,6 @@ class Island():
     # would done idividually to each island and the chromosomes in it
     def crossover(self, chrom1, chrom2, mut_rate):
         # scheme to be implemented using crossover scheme where a randomly selected set of parent 1 would displace the randomly selected set of parent 2
-
         #start should be between 25th and 50th percentile of len of chromomosome
         #end should be between 75th and 100th percentile of len of chromomosome
         len_chromosome = len(chrom1.indi)
