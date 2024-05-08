@@ -1,26 +1,30 @@
 import taichi as ti
 import sys
-import time
-import numpy as np
-import math
-import matplotlib.pyplot as plt
-
+	
 device = sys.argv[2]
 if(device == "gpu"):
-	ti.init(arch=ti.gpu, default_fp=ti.f64)
+	ti.init(arch=ti.gpu, default_fp=ti.f64, offline_cache=True)
 else:
-    ti.init(arch=ti.cpu, default_fp=ti.f64)
+	ti.init(arch=ti.cpu, default_fp=ti.f64, offline_cache=True)
 	
 from taichi_rng import randint, randint_isl, randfloat_isl # similar to random.randint and random.sample
-from taichi_knap import Individual, TYPE_GENOME, knapsack_random_length_crossover
+from taichi_gcolor import Individual, TYPE_GENOME, gcolor_one_point_crossover, MAX_COLORS
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+import math
 
 # POPULATION_SIZE = ti.field(dtype=ti.i32, shape=())
 POPULATION_SIZE = 100
 NUM_ISLANDS = int(sys.argv[1])
-NUM_GENERATIONS = 1000
+NUM_GENERATIONS = 20
 
 # NUM_OFFSPRINGS = ti.field(dtype=ti.i32, shape=())
 NUM_OFFSPRINGS = 10
+
+ISL_BESTCOLORS = ti.field(dtype=ti.i32, shape=(NUM_ISLANDS))
+for i in range(NUM_ISLANDS):
+	ISL_BESTCOLORS[i] = int(MAX_COLORS)
 
 ISL_POPULATIONS = Individual.field(shape=(NUM_ISLANDS, POPULATION_SIZE + NUM_OFFSPRINGS))
 
@@ -61,7 +65,7 @@ def truncation_selection(self, isl_ind: ti.i32, res_opt: ti.i32):
 		# Sort the array based on fitness values
 		for i in range(POPULATION_SIZE):
 			for j in range(i + 1, POPULATION_SIZE):
-				if fitnesses[i] < fitnesses[j]:
+				if fitnesses[i] > fitnesses[j]:
 					fitnesses[i], fitnesses[j] = fitnesses[j], fitnesses[i]
 					indices[i], indices[j] = indices[j], indices[i]
 		
@@ -77,7 +81,7 @@ def truncation_selection(self, isl_ind: ti.i32, res_opt: ti.i32):
 		# Sort the array based on fitness values, nothing else is required
 		for i in range(POPULATION_SIZE + NUM_OFFSPRINGS):
 			for j in range(i + 1, POPULATION_SIZE + NUM_OFFSPRINGS):
-				if ISL_POPULATIONS[isl_ind, i].fitness < ISL_POPULATIONS[isl_ind, j].fitness:
+				if ISL_POPULATIONS[isl_ind, i].fitness > ISL_POPULATIONS[isl_ind, j].fitness:
 					ISL_POPULATIONS[isl_ind, i], ISL_POPULATIONS[isl_ind, j] = ISL_POPULATIONS[isl_ind, j], ISL_POPULATIONS[isl_ind, i]                
 
 		# for i in range(num_selections):
@@ -113,36 +117,36 @@ def binary_tournament_selection(self, isl_ind: ti.i32, res_opt: ti.i32):
 			ISL_POPULATIONS[isl_ind, i] = ISL_SELECTION_RESULTS[isl_ind, i]
 		
 @ti.func
-def fitness_proportional_selection(isl_ind, res_opt):
-    if(res_opt == 0):
-        population_proportions = ti.Vector([0.0 for _ in range(POPULATION_SIZE)])
-        cumulative_fitness = 0.0            
-        for i in range(POPULATION_SIZE):
-            individual = ISL_POPULATIONS[isl_ind, i]        
-            cumulative_fitness += (1/individual) # change to fitness
-            population_proportions[i] = cumulative_fitness        
-        total_fitness = cumulative_fitness            
-        for i in range(NUM_OFFSPRINGS):
-            random_float = randfloat_isl(0, total_fitness, isl_ind)
-            for j in range(POPULATION_SIZE-1):
-                if population_proportions[j+1] > random_float:
-                    ISL_PARENT_SELECTIONS[isl_ind, i] = ISL_POPULATIONS[isl_ind, j - 1]
-                    break
-    elif(res_opt == 1):
-        population_proportions = ti.Vector([0.0 for _ in range(POPULATION_SIZE + NUM_OFFSPRINGS)])
-        cumulative_fitness = 0.0            
-        for i in range(POPULATION_SIZE + NUM_OFFSPRINGS):
-            individual = ISL_POPULATIONS[isl_ind, i] 
-            ISL_SELECTION_RESULTS[isl_ind, i] = individual
-            cumulative_fitness += (1/individual) # change to fitness
-            population_proportions[i] = cumulative_fitness        
-        total_fitness = cumulative_fitness            
-        for i in range(POPULATION_SIZE):
-            random_float = randfloat_isl(0, total_fitness)
-            for j in range(POPULATION_SIZE):
-                if population_proportions[j+1] > random_float:
-                    ISL_POPULATIONS[isl_ind, i] = ISL_SELECTION_RESULTS[isl_ind, j - 1]
-                    break
+def fitness_proportional_selection(self, isl_ind, res_opt):
+	if(res_opt == 0):
+		population_proportions = ti.Vector([0.0 for _ in range(POPULATION_SIZE)])
+		cumulative_fitness = 0.0            
+		for i in range(POPULATION_SIZE):
+			individual = ISL_POPULATIONS[isl_ind, i]        
+			cumulative_fitness += (1/individual.fitness)
+			population_proportions[i] = cumulative_fitness        
+		total_fitness = cumulative_fitness            
+		for i in range(NUM_OFFSPRINGS):
+			random_float = randfloat_isl(0, total_fitness, isl_ind)
+			for j in range(POPULATION_SIZE-1):
+				if population_proportions[j+1] > random_float:
+					ISL_PARENT_SELECTIONS[isl_ind, i] = ISL_POPULATIONS[isl_ind, j - 1]
+					break
+	elif(res_opt == 1):
+		population_proportions = ti.Vector([0.0 for _ in range(POPULATION_SIZE + NUM_OFFSPRINGS)])
+		cumulative_fitness = 0.0            
+		for i in range(POPULATION_SIZE + NUM_OFFSPRINGS):
+			individual = ISL_POPULATIONS[isl_ind, i] 
+			ISL_SELECTION_RESULTS[isl_ind, i] = individual
+			cumulative_fitness += (1/individual.fitness)
+			population_proportions[i] = cumulative_fitness        
+		total_fitness = cumulative_fitness            
+		for i in range(POPULATION_SIZE):
+			random_float = randfloat_isl(0, total_fitness, isl_ind)
+			for j in range(POPULATION_SIZE):
+				if population_proportions[j+1] > random_float:
+					ISL_POPULATIONS[isl_ind, i] = ISL_SELECTION_RESULTS[isl_ind, j - 1]
+					break
 
 
 @ti.func
@@ -296,30 +300,44 @@ def i_run_generation(self, isl_ind: ti.i32):
 	instead of the index. The only pitfall could be if the values in place are not changed but 
 	I think they will be
 	'''
-	self.parent_selection_function(isl_ind, 0)
-	for k in range(0, NUM_OFFSPRINGS-1):
-		if k % 2 == 1:
-			continue
-		# BUG WARNING: printing genome causes issues for later usage in the scope. I think
-		# this is since print is performed in python scope and not taichi scope which causes
-		# this sort of undeterministic behaviour
-		# print(PARENT_SELECTION[k].genome, PARENT_SELECTION[k+1].genome)
-		offspring1_genome, offspring2_genome = self.cross_over_function(ISL_PARENT_SELECTIONS[isl_ind, k], ISL_PARENT_SELECTIONS[isl_ind, k+1], isl_ind)
-		offspring1 = Individual()
-		offspring1.initialize_with_genome(offspring1_genome)
-		offspring2 = Individual()
-		offspring2.initialize_with_genome(offspring2_genome)
+	best_fitness = ti.math.inf
+	best_colors = ISL_BESTCOLORS[isl_ind]
+	counter = 0
+	while(best_fitness != 0 and counter < 10):
+		self.parent_selection_function(isl_ind, 0)
+		for k in range(0, NUM_OFFSPRINGS-1):
+			if k % 2 == 1:
+				continue
+			# BUG WARNING: printing genome causes issues for later usage in the scope. I think
+			# this is since print is performed in python scope and not taichi scope which causes
+			# this sort of undeterministic behaviour
+			# print(PARENT_SELECTION[k].genome, PARENT_SELECTION[k+1].genome)
+			offspring1_genome, offspring2_genome = self.cross_over_function(ISL_PARENT_SELECTIONS[isl_ind, k], ISL_PARENT_SELECTIONS[isl_ind, k+1], isl_ind)
+			offspring1 = Individual()
+			offspring1.initialize_with_genome(offspring1_genome)
+			offspring2 = Individual()
+			offspring2.initialize_with_genome(offspring2_genome)
 
-		rand_num1, rand_num2 = randint_isl(0,100,isl_ind)/100, randint_isl(0,100, isl_ind)/100
-		if rand_num1 <= self.mutation_rate:
-			offspring1.mutate_isl(isl_ind)
-		if rand_num2 <= self.mutation_rate:
-			offspring2.mutate_isl(isl_ind)
+			rand_num1, rand_num2 = randint_isl(0,100,isl_ind)/100, randint_isl(0,100, isl_ind)/100
+			if rand_num1 <= self.mutation_rate:
+				offspring1.mutate_isl(ISL_BESTCOLORS[isl_ind], isl_ind)
+			if rand_num2 <= self.mutation_rate:
+				offspring2.mutate_isl(ISL_BESTCOLORS[isl_ind], isl_ind)
+				
+			ISL_POPULATIONS[isl_ind, POPULATION_SIZE+k] = offspring1
+			ISL_POPULATIONS[isl_ind, POPULATION_SIZE+k+1] = offspring2
 			
-		ISL_POPULATIONS[isl_ind, POPULATION_SIZE+k] = offspring1
-		ISL_POPULATIONS[isl_ind, POPULATION_SIZE+k+1] = offspring2
+		self.survivor_selection_function(isl_ind, 1)
 		
-	self.survivor_selection_function(isl_ind, 1)
+		best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
+		if(ISL_POPULATIONS[isl_ind, ti.i32(best_index)].fitness) == 0:
+			best_fitness = 0
+			ISL_BESTCOLORS[isl_ind] -= 1
+			break
+
+		counter += 1
+
+	return ISL_BESTCOLORS[isl_ind]
 		
 @ti.kernel
 def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: ti.i32, num_generations: ti.i32):
@@ -332,13 +350,13 @@ def run_islands(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_step: 
 			if (i + 1)% migration_step == 0:
 				ti.simt.block.sync()				
 				EA.migration(isl_ind)				
-			EA.run_generation(isl_ind)
+			best_fitness = EA.run_generation(isl_ind)
 			# best_index is always 0 so we don't need this function
-			best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
+			# best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
 			best_index = ti.i32(best_index)
 			
-			BEST_FITNESS_GENERATION[i, isl_ind, 0] = ISL_POPULATIONS[isl_ind, best_index].fitness
-			BEST_FITNESS_GENERATION[i, isl_ind, 1] = avg_fitness
+			BEST_FITNESS_GENERATION[i, isl_ind, 0] = best_fitness#ISL_POPULATIONS[isl_ind, best_index].fitness
+			# BEST_FITNESS_GENERATION[i, isl_ind, 1] = avg_fitness
 
 		BEST_INDICES[isl_ind] = best_index		
 
@@ -351,14 +369,14 @@ def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_st
 			# JAADU
 			if (i + 1) % migration_step == 0:                
 				EA.migration(isl_ind)
-			EA.run_generation(isl_ind)
+			best_fitness = EA.run_generation(isl_ind)
 			# best_index is always 0 so we don't need this function
 			best_index, avg_fitness = get_avg_fitnes_n_best_indiv_index(isl_ind)
 			best_index = ti.i32(best_index)
+
+			BEST_FITNESS_GENERATION[i, isl_ind, 0] = best_fitness
 			
-			BEST_FITNESS_GENERATION[i, isl_ind, 0] = ISL_POPULATIONS[isl_ind, best_index].fitness
-			BEST_FITNESS_GENERATION[i, isl_ind, 1] = avg_fitness
-		BEST_INDICES[isl_ind] = best_index	
+		BEST_INDICES[isl_ind] = best_index		
 
 	
 	
@@ -377,11 +395,10 @@ def run_islands_cpu(EA: EvolutionaryAlgorithm, num_islands: ti.i32, migration_st
 #         print(POPULATION[x].fitness, end=', ')
 		
 
-# BUG: REMEMBER YOU HAVE TO FIX FITNESS COMPUTATION FOR THIS AS IT IS OPPOSITE TO TSP
 
 if __name__ == "__main__":
 	EvolutionaryAlgorithm.methods = {
-		'cross_over_function': knapsack_random_length_crossover,
+		'cross_over_function': gcolor_one_point_crossover,
 		"parent_selection_function": truncation_selection,
 		"survivor_selection_function": truncation_selection,
 		'run_generation': i_run_generation,
@@ -398,26 +415,34 @@ if __name__ == "__main__":
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].genome)
 		print(ISL_POPULATIONS[isl_ind, BEST_INDICES[isl_ind]].fitness)
 	ending_time = time.time() - starting_time
+
+	# with open("time.txt", "a") as file:
+	# 	file.write(device + " " + str(NUM_ISLANDS) + " " + str(ending_time) + "\n")
 	
+	print(device, NUM_ISLANDS, "done")
+
+	print("Time taken", ending_time)
+
+	''' GRAPHING '''
 	x = np.arange(1, NUM_GENERATIONS+1, 1)
 	y = []	
 	y1 = []
 
 	for i in range(NUM_GENERATIONS):
-		best_fitness = 0
+		best_fitness = math.inf
 		average_fitness = 0
 		for j in range(NUM_ISLANDS):		
 			current = BEST_FITNESS_GENERATION[i, j, 0]
 			average_fitness += BEST_FITNESS_GENERATION[i, j, 1]
-			if(current > best_fitness):
+			if(current < best_fitness):
 				best_fitness = current
 		y1.append(average_fitness/NUM_ISLANDS)
 		y.append(best_fitness)
 
-	print(y)
-	print(y1)
 	plt.plot(x, y, label="Best fitness")
 	plt.plot(x, y1, label="Average fitness")
 	plt.xlabel("Num generations")
 	plt.ylabel("Average/Best fitness")
-	plt.savefig(str(device)+str(NUM_ISLANDS)+".png")	
+	plt.savefig("data/graphs/gcolor_" + str(device)+str(NUM_ISLANDS)+".png")	
+	
+	

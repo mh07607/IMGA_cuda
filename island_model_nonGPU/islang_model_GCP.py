@@ -389,7 +389,7 @@ if migration_stratergy == 2 or migration_stratergy == 3:
     migration_interval = 10
 
 if __name__ == '__main__':
-    file_path = '/Users/asadullahchaudhry/Github HU/IMGA_cuda/island_model_nonGPU/queen11_11.col'  
+    file_path = './queen11_11.col'  
     graph = read_graph_from_file(file_path)
     ####HERE, WHAT EXACTLY IS TOURNAMENT SIZE####  
     survivor_method = 4
